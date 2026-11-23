@@ -1,10 +1,28 @@
 # bomTR
 
+[![Release](https://img.shields.io/github/v/release/AtaCanYmc/bom-tr?include_prereleases&label=release)](https://github.com/AtaCanYmc/bom-tr/releases)
+[![License: MIT](https://img.shields.io/github/license/AtaCanYmc/bom-tr)](LICENSE)
+[![Manifest V3](https://img.shields.io/badge/Chrome-Manifest%20V3-0EA5E9)](public/manifest.json)
+[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-FE5196)](https://www.conventionalcommits.org)
+
 Türkçe | [English](README.en.md)
 
-10 alanlı `bom-sourcing` BOM (Bill of Materials) şemasını yönetmek ve Türkiye'deki 6 elektronik bileşen mağazasında `robo-api` veya çevrimdışı `?q=...` aramasıyla fiyat/stok kıyaslamak için Manifest V3 Chrome Side Panel eklentisi.
+10 alanlı `bom-sourcing` BOM (Bill of Materials) şemasını yönetmek ve Türkiye'deki 6 elektronik bileşen mağazasında `robo-api` veya çevrimdışı `?q=...` aramasıyla fiyat ve stok kıyaslamak için Manifest V3 Chrome Side Panel eklentisi.
+
+## İçindekiler
+
+- [Mimari](#mimari)
+- [Hızlı Başlangıç](#hızlı-başlangıç)
+- [Depo Yapısı](#depo-yapısı)
+- [İzinler ve Gizlilik Sınırı](#izinler-ve-gizlilik-sınırı)
+- [Dokümantasyon](#dokümantasyon)
+- [Doğrulama ve Paketleme](#doğrulama-ve-paketleme)
+- [Sık Sorulan Teknik Sorular](#sık-sorulan-teknik-sorular)
+- [Yönetişim ve Lisans](#yönetişim-ve-lisans)
 
 ## Mimari
+
+Eklenti, Side Panel arayüzünü arka plan Service Worker'ından ve 6 mağazaya izole edilmiş Content Script adaptörlerinden ayırır. Aday fiyat ve stok kanıtları, 10 alanlı ham BOM nesnesini bozmadan ayrı tutulur.
 
 ```mermaid
 flowchart LR
@@ -35,12 +53,17 @@ make verify
 bom-tr/
 ├── .github/workflows/
 │   └── release-please.yml    # Otomatik sürümleme ve Chrome ZIP sürüm yüklemesi
+├── docs/
+│   ├── README.md             # Dokümantasyon dizini
+│   ├── architecture.md       # MV3 katmanları, mesaj akışı ve DOM adaptörleri
+│   ├── bom-contract.md       # 10 alanlı BOM sözleşmesi ve dışa aktarım biçimleri
+│   └── robo-api.md           # REST uç noktaları, kargo varsayılanları ve offline fallback
 ├── public/
 │   ├── icons/                # 16px, 48px, 128px eklenti ikonları
 │   └── manifest.json         # Minimum izinli Manifest V3 tanımı
 ├── src/
 │   ├── background/
-│   │   ├── index.ts          # Service worker, sağ tık menüsü, badge, kademeli sekme açıcı
+│   │   ├── index.ts          # Service worker, sağ tık menüsü, rozet, kademeli sekme açıcı
 │   │   ├── roboApi.ts        # robo-api HTTP istemcisi ve tek/bölünmüş sepet hesaplayıcı
 │   │   └── storageKeys.ts    # chrome.storage.local anahtar sabitleri
 │   ├── content/
@@ -63,7 +86,11 @@ bom-tr/
 ├── tests/
 │   └── bom.test.ts           # Node yerleşik test koşucusu ile şema, parser ve sepet testleri
 ├── .release-please-manifest.json
+├── CONTRIBUTING.md
+├── LICENSE
 ├── Makefile
+├── README.en.md
+├── SECURITY.md
 ├── release-please-config.json
 ├── sidepanel.html
 ├── tsconfig.json
@@ -84,6 +111,13 @@ bom-tr/
 
 `robo-api` servisine yalnızca temizlenmiş parça arama terimleri ve BOM kalem adetleri gönderilir. Proje dosyaları, kimlik bilgileri veya ilgisiz sayfa içerikleri asla gönderilmez.
 
+## Dokümantasyon
+
+- [Dokümantasyon Dizini](docs/README.md)
+- [Mimari ve Mesaj Akışı](docs/architecture.md)
+- [10 Alanlı BOM Sözleşmesi](docs/bom-contract.md)
+- [robo-api ve Offline Fallback](docs/robo-api.md)
+
 ## Doğrulama ve Paketleme
 
 ```bash
@@ -92,3 +126,23 @@ make test          # Şema doğrulama, exporter, fiyat ayrıştırıcı ve sepet
 make build         # dist/ altına üretim MV3 derlemesi
 make release-dry   # Tam doğrulama + Chrome ZIP arşivi ve SHA256SUMS
 ```
+
+## Sık Sorulan Teknik Sorular
+
+### `robo-api` kapalıyken eklenti çalışır mı?
+
+Evet. Yerel BOM düzenleme, `bom-sourcing` JSON içe ve dışa aktarım, aktif mağaza sayfasından DOM yakalama ve 6 mağazanın `?q=...` arama sekmelerini açma işlevleri API olmadan çalışmaya devam eder.
+
+### `partial` veya `ambiguous` eşleşmeler neden otomatik kilitlenmiyor?
+
+Otomatik katalog araması aynı addaki farklı voltaj, paket veya pin dizilimine sahip bileşenleri döndürebilir. Bu nedenle kullanıcı açıkça **Onayla** düğmesine basana kadar seçim kilitlenmez ve `exact` durumuna yükseltilmez.
+
+### Tailscale veya yerel ağdaki bir `robo-api` sunucusuna nasıl bağlanılır?
+
+**Ayar** sekmesinde sunucu adresini girip **Kaydet & Test** düğmesine basın. Chrome, `optional_host_permissions` üzerinden yalnızca o origin için izin ister.
+
+## Yönetişim ve Lisans
+
+- Katkı ve PR kuralları: [CONTRIBUTING.md](CONTRIBUTING.md)
+- Güvenlik politikası: [SECURITY.md](SECURITY.md)
+- Lisans: [MIT](LICENSE)

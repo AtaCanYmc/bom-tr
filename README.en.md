@@ -1,10 +1,28 @@
 # bomTR
 
+[![Release](https://img.shields.io/github/v/release/AtaCanYmc/bom-tr?include_prereleases&label=release)](https://github.com/AtaCanYmc/bom-tr/releases)
+[![License: MIT](https://img.shields.io/github/license/AtaCanYmc/bom-tr)](LICENSE)
+[![Manifest V3](https://img.shields.io/badge/Chrome-Manifest%20V3-0EA5E9)](public/manifest.json)
+[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-FE5196)](https://www.conventionalcommits.org)
+
 [Türkçe](README.md) | English
 
-Manifest V3 Chrome Side Panel extension for managing 10-field `bom-sourcing` Bills of Materials and comparing live component prices across six Turkish electronics stores via `robo-api` or offline search fallback.
+Manifest V3 Chrome Side Panel extension for managing 10-field `bom-sourcing` Bills of Materials and comparing live component prices across six Turkish electronics stores via `robo-api` or offline `?q=...` search fallback.
+
+## Table of Contents
+
+- [Architecture](#architecture)
+- [Quick Start](#quick-start)
+- [Repository Layout](#repository-layout)
+- [Permissions and Privacy Boundary](#permissions-and-privacy-boundary)
+- [Documentation](#documentation)
+- [Verification and Packaging](#verification-and-packaging)
+- [Technical FAQ](#technical-faq)
+- [Governance and License](#governance-and-license)
 
 ## Architecture
+
+The extension isolates the Side Panel UI, the background Service Worker, and 6 store-scoped Content Script DOM adapters. Observed candidate prices and stock evidence are stored outside the strict 10-field `BomItem` contract.
 
 ```mermaid
 flowchart LR
@@ -35,6 +53,11 @@ make verify
 bom-tr/
 ├── .github/workflows/
 │   └── release-please.yml    # Automated versioning and Chrome ZIP release uploads
+├── docs/
+│   ├── README.md             # Documentation index
+│   ├── architecture.md       # MV3 layers, message flow, and DOM adapter isolation
+│   ├── bom-contract.md       # 10-field BOM schema contract and export formats
+│   └── robo-api.md           # REST endpoints, shipping defaults, and offline fallback
 ├── public/
 │   ├── icons/                # 16px, 48px, 128px extension icons
 │   └── manifest.json         # Manifest V3 config with minimum permissions
@@ -63,7 +86,11 @@ bom-tr/
 ├── tests/
 │   └── bom.test.ts           # Node built-in test runner checks for schema, parser, cart math
 ├── .release-please-manifest.json
+├── CONTRIBUTING.md
+├── LICENSE
 ├── Makefile
+├── README.md
+├── SECURITY.md
 ├── release-please-config.json
 ├── sidepanel.html
 ├── tsconfig.json
@@ -84,6 +111,13 @@ bom-tr/
 
 Only sanitized component search queries and BOM item quantities are sent to `robo-api`. Project files, credentials, and unrelated page content are never transmitted.
 
+## Documentation
+
+- [Documentation Index](docs/README.md)
+- [Architecture and Message Flow](docs/architecture.md)
+- [10-Field BOM Contract](docs/bom-contract.md)
+- [robo-api and Offline Fallback](docs/robo-api.md)
+
 ## Verification and Packaging
 
 ```bash
@@ -92,3 +126,23 @@ make test          # Schema validation, exporter, price parser, and cart math ch
 make build         # Production MV3 bundle to dist/
 make release-dry   # Full verification + Chrome ZIP archive and SHA256SUMS
 ```
+
+## Technical FAQ
+
+### Does the extension work when `robo-api` is offline?
+
+Yes. Local BOM editing, `bom-sourcing` JSON import and export, active-tab DOM capture on the 6 stores, and staggered `?q=...` search tabs work without an active API server.
+
+### Why are `partial` and `ambiguous` matches never locked automatically?
+
+Catalog search results can share a part family while differing in voltage, package, or pinout. Selections remain unlocked until the user explicitly confirms compatibility.
+
+### How do I connect to a Tailscale or LAN `robo-api` host?
+
+Enter the base URL in the **Settings** tab and click **Kaydet & Test**. Chrome requests scoped host permission for that specific origin via `optional_host_permissions`.
+
+## Governance and License
+
+- Contribution workflow: [CONTRIBUTING.md](CONTRIBUTING.md)
+- Security policy: [SECURITY.md](SECURITY.md)
+- License: [MIT](LICENSE)

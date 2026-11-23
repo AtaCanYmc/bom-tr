@@ -1,7 +1,7 @@
 {
   "name": "bom-tr",
   "private": true,
-  "version": "0.1.4",
+  "version": "0.1.5",
   "type": "module",
   "description": "bomTR — Manifest V3 Chrome Side Panel BOM & electronics sourcing workspace",
   "scripts": {

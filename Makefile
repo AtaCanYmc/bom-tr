@@ -30,16 +30,7 @@ build: ## Build production MV3 extension into dist/
 	npm run build
 
 check-version: ## Verify package.json, manifest.json, and release-please manifest match
-	@node -e ' \
-		const pkg = require("./package.json").version; \
-		const man = require("./public/manifest.json").version; \
-		const rp = require("./.release-please-manifest.json")["."]; \
-		if (pkg !== man || pkg !== rp) { \
-			console.error("Version mismatch:", { pkg, man, rp }); \
-			process.exit(1); \
-		} \
-		console.log("Versions aligned: v" + pkg); \
-	'
+	@node -e 'const pkg=require("./package.json").version, man=require("./public/manifest.json").version, rp=require("./.release-please-manifest.json")["."]; if (pkg!==man || pkg!==rp) { console.error("Version mismatch:", {pkg, man, rp}); process.exit(1); } console.log("Versions aligned: v"+pkg);'
 
 verify: check-version typecheck test build ## Run all checks and build
 
@@ -53,11 +44,7 @@ package: build ## Package dist/ as Chrome Web Store ZIP + SHA256SUMS
 release-dry: verify package ## Run full local release verification and archive build
 
 version: ## Print current versions across manifests
-	@node -e ' \
-		console.log("package.json:                ", require("./package.json").version); \
-		console.log("public/manifest.json:        ", require("./public/manifest.json").version); \
-		console.log(".release-please-manifest.json:", require("./.release-please-manifest.json")["."]); \
-	'
+	@node -e 'console.log("package.json:                ", require("./package.json").version); console.log("public/manifest.json:        ", require("./public/manifest.json").version); console.log(".release-please-manifest.json:", require("./.release-please-manifest.json")["."]);'
 
 clean: ## Remove dist/ and release/ artifacts
 	rm -rf dist "$(RELEASE_DIR)"

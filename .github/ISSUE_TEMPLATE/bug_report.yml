@@ -1,0 +1,50 @@
+name: Bug Report
+description: Report a reproducible defect in the extension, DOM adapters, or BOM contract
+title: "fix: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Verify that the issue is not already reported before opening a new ticket.
+        For security vulnerabilities, follow [SECURITY.md](../../SECURITY.md).
+  - type: textarea
+    id: summary
+    attributes:
+      label: Bug Description
+      description: Concise description of the defect.
+      placeholder: Describe what failed and in which Side Panel tab or store adapter.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Exact steps to reproduce the issue.
+      placeholder: |
+        1. Open bomTR Side Panel
+        2. Run action or open store URL
+        3. Observe error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What should have happened.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Console Logs or BOM Sample
+      description: Paste Side Panel or Service Worker console errors, or a sanitized BOM snippet.
+      render: shell
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Chrome version, bomTR version, and whether robo-api is enabled.
+      placeholder: macOS 15, Chrome 135, bomTR v0.1.0, robo-api offline
+    validations:
+      required: true

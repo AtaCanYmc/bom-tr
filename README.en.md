@@ -1,5 +1,6 @@
 # bomTR
 
+[![CI](https://github.com/AtaCanYmc/bom-tr/actions/workflows/ci.yml/badge.svg)](https://github.com/AtaCanYmc/bom-tr/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/AtaCanYmc/bom-tr?include_prereleases&label=release)](https://github.com/AtaCanYmc/bom-tr/releases)
 [![License: MIT](https://img.shields.io/github/license/AtaCanYmc/bom-tr)](LICENSE)
 [![Manifest V3](https://img.shields.io/badge/Chrome-Manifest%20V3-0EA5E9)](public/manifest.json)
@@ -51,8 +52,14 @@ make verify
 
 ```text
 bom-tr/
-├── .github/workflows/
-│   └── release-please.yml    # Automated versioning and Chrome ZIP release uploads
+├── .github/
+│   ├── ISSUE_TEMPLATE/       # Bug report, feature request, and config.yaml
+│   ├── PULL_REQUEST_TEMPLATE/# PR verification checklist
+│   ├── workflows/
+│   │   ├── ci.yml            # Version, typecheck, test, build, and doc link checks
+│   │   └── release-please.yml# Automated versioning and Chrome ZIP release uploads
+│   ├── CODEOWNERS            # Review routing rules
+│   └── dependabot.yml        # Weekly npm and GitHub Actions updates
 ├── docs/
 │   ├── README.md             # Documentation index
 │   ├── architecture.md       # MV3 layers, message flow, and DOM adapter isolation
@@ -85,11 +92,15 @@ bom-tr/
 │       └── store.ts          # Zustand state persisted to chrome.storage.local
 ├── tests/
 │   └── bom.test.ts           # Node built-in test runner checks for schema, parser, cart math
+├── .editorconfig
+├── .gitattributes
+├── .markdownlint.json
 ├── .release-please-manifest.json
 ├── CONTRIBUTING.md
 ├── LICENSE
 ├── Makefile
 ├── README.md
+├── ROADMAP.md
 ├── SECURITY.md
 ├── release-please-config.json
 ├── sidepanel.html
@@ -144,5 +155,6 @@ Enter the base URL in the **Settings** tab and click **Kaydet & Test**. Chrome r
 ## Governance and License
 
 - Contribution workflow: [CONTRIBUTING.md](CONTRIBUTING.md)
+- Release milestones: [ROADMAP.md](ROADMAP.md)
 - Security policy: [SECURITY.md](SECURITY.md)
 - License: [MIT](LICENSE)

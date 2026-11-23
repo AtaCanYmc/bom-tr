@@ -1,0 +1,14 @@
+# Global code ownership
+* @AtaCanYmc
+
+# Workflows and automation manifests
+/.github/ @AtaCanYmc
+
+# Extension manifest and permissions
+/public/manifest.json @AtaCanYmc
+
+# Security, licensing, and governance
+/LICENSE @AtaCanYmc
+/SECURITY.md @AtaCanYmc
+/CONTRIBUTING.md @AtaCanYmc
+/ROADMAP.md @AtaCanYmc

@@ -18,4 +18,5 @@
 | :--- | :--- |
 | [SECURITY.md](../SECURITY.md) | Desteklenen sürümler, gizlilik sınırı, izin gerekçeleri ve güvenlik bildirimi. |
 | [CONTRIBUTING.md](../CONTRIBUTING.md) | Geliştirme akışı, Conventional Commits kuralları ve PR doğrulama adımları. |
+| [ROADMAP.md](../ROADMAP.md) | Sürüm hedeflerine göre planlanan teknik teslimatlar. |
 | [LICENSE](../LICENSE) | MIT lisans metni. |

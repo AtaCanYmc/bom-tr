@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify versions, types, tests, and build
+        run: make verify
+
+      - name: Verify essential governance files
+        run: |
+          for f in README.md README.en.md LICENSE CONTRIBUTING.md SECURITY.md ROADMAP.md; do
+            test -f "$f" || (echo "Missing $f" && exit 1)
+          done
+
+      - name: Validate internal documentation links
+        run: |
+          python3 -c '
+          import re, glob, os, sys
+
+          def check_file(f):
+              content = open(f, encoding="utf-8").read()
+              content = re.sub(r"```[\s\S]*?```", "", content)
+              content = re.sub(r"`[^`]*`", "", content)
+              links = re.findall(r"\[.*?\]\((?!https?://|mailto:)(.*?)(?:#.*)?\)", content)
+              broken = []
+              for link in links:
+                  link = link.strip().split("?")[0]
+                  if not link or link.startswith("#"):
+                      continue
+                  target = os.path.normpath(os.path.join(os.path.dirname(f), link))
+                  if not os.path.exists(target):
+                      broken.append(f"{f} -> {link} (resolved: {target})")
+              return broken
+
+          all_broken = []
+          for f in glob.glob("**/*.md", recursive=True):
+              if f.startswith("node_modules/"):
+                  continue
+              all_broken.extend(check_file(f))
+
+          if all_broken:
+              print("Broken internal documentation links:", file=sys.stderr)
+              for b in all_broken:
+                  print("  -", b, file=sys.stderr)
+              sys.exit(1)
+          print("Internal documentation links verified.")
+          '

@@ -1,5 +1,6 @@
 # bomTR
 
+[![CI](https://github.com/AtaCanYmc/bom-tr/actions/workflows/ci.yml/badge.svg)](https://github.com/AtaCanYmc/bom-tr/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/AtaCanYmc/bom-tr?include_prereleases&label=s%C3%BCr%C3%BCm)](https://github.com/AtaCanYmc/bom-tr/releases)
 [![License: MIT](https://img.shields.io/github/license/AtaCanYmc/bom-tr)](LICENSE)
 [![Manifest V3](https://img.shields.io/badge/Chrome-Manifest%20V3-0EA5E9)](public/manifest.json)
@@ -51,8 +52,14 @@ make verify
 
 ```text
 bom-tr/
-├── .github/workflows/
-│   └── release-please.yml    # Otomatik sürümleme ve ZIP sürüm yükleme akışı
+├── .github/
+│   ├── ISSUE_TEMPLATE/       # Hata bildirimi, özellik isteği ve config.yaml
+│   ├── PULL_REQUEST_TEMPLATE/# PR doğrulama şablonu
+│   ├── workflows/
+│   │   ├── ci.yml            # Sürüm, tip, test, derleme ve belge bağlantı kontrolü
+│   │   └── release-please.yml# Otomatik sürümleme ve ZIP sürüm yükleme akışı
+│   ├── CODEOWNERS            # İnceleme sorumluluğu tanımları
+│   └── dependabot.yml        # Haftalık npm ve GitHub Actions güncellemeleri
 ├── docs/
 │   ├── README.md             # Belge dizini
 │   ├── architecture.md       # MV3 katmanları, mesaj akışı ve DOM adaptörleri
@@ -85,11 +92,15 @@ bom-tr/
 │       └── store.ts          # chrome.storage.local ile kalıcı Zustand deposu
 ├── tests/
 │   └── bom.test.ts           # Şema, dışa aktarım, fiyat ayrıştırma ve sepet hesabı testleri
+├── .editorconfig
+├── .gitattributes
+├── .markdownlint.json
 ├── .release-please-manifest.json
 ├── CONTRIBUTING.md
 ├── LICENSE
 ├── Makefile
 ├── README.en.md
+├── ROADMAP.md
 ├── SECURITY.md
 ├── release-please-config.json
 ├── sidepanel.html
@@ -144,5 +155,6 @@ Aynı isimle aranan parçalar farklı voltaj, kılıf veya pin dizilimine sahip 
 ## Katkı ve Lisans
 
 - Katkı ve PR kuralları için [CONTRIBUTING.md](CONTRIBUTING.md) dosyasına bakın.
+- Planlanan sürümler için [ROADMAP.md](ROADMAP.md) dosyasına bakın.
 - Güvenlik bildirimi için [SECURITY.md](SECURITY.md) dosyasını inceleyin.
 - Proje [MIT](LICENSE) lisansıyla yayımlanmıştır.

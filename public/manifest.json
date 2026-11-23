@@ -1,0 +1,55 @@
+{
+  "manifest_version": 3,
+  "name": "bomTR",
+  "version": "0.1.0",
+  "description": "Side Panel tabanlı BOM ve Türkiye elektronik bileşen tedarik çalışma alanı.",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_title": "bomTR"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "permissions": [
+    "sidePanel",
+    "storage",
+    "contextMenus",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://www.robotistan.com/*",
+    "https://www.robolinkmarket.com/*",
+    "https://www.robo90.com/*",
+    "https://www.direnc.net/*",
+    "https://www.motorobit.com/*",
+    "https://www.robotsepeti.com/*",
+    "http://127.0.0.1/*",
+    "http://localhost/*"
+  ],
+  "optional_host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.robotistan.com/*",
+        "https://www.robolinkmarket.com/*",
+        "https://www.robo90.com/*",
+        "https://www.direnc.net/*",
+        "https://www.motorobit.com/*",
+        "https://www.robotsepeti.com/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

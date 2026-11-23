@@ -1,3 +1,7 @@
+<p align="left">
+  <img src="public/icons/icon-128.png" alt="bomTR logo" width="56" height="56" />
+</p>
+
 # bomTR
 
 [![CI](https://github.com/AtaCanYmc/bom-tr/actions/workflows/ci.yml/badge.svg)](https://github.com/AtaCanYmc/bom-tr/actions/workflows/ci.yml)

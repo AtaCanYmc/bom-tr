@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/AtaCanYmc/bom-tr/compare/v0.1.1...v0.1.2) (2026-11-23)
+
+
+### Features
+
+* enhance UI components and add theme support; implement clipboard copy error handling ([2b28dcc](https://github.com/AtaCanYmc/bom-tr/commit/2b28dcc9ef885af6cdaea23ba948b68cd75a08d6))
+
 ## [0.1.1](https://github.com/AtaCanYmc/bom-tr/compare/v0.1.0...v0.1.1) (2026-11-23)
 
 

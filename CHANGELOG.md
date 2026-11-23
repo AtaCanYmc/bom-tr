@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.5](https://github.com/AtaCanYmc/bom-tr/compare/v0.1.4...v0.1.5) (2026-11-23)
+
+
+### Features
+
+* add GitHub Pages deployment workflow and site files; update README with website link ([bff6a61](https://github.com/AtaCanYmc/bom-tr/commit/bff6a61616b0ca149524dce1f0599902e2ad3189))
+
+
+### Documentation
+
+* add bomTR logo to README files ([6e0810f](https://github.com/AtaCanYmc/bom-tr/commit/6e0810f8a035d5bf5f9678b6cb13d17e747d0fb5))
+* update Chrome Web Store links and installation instructions in README and CHROMEWEBSTORE files ([bf9600d](https://github.com/AtaCanYmc/bom-tr/commit/bf9600d3d9c96f8670febd0d2db7555511a8d5e2))
+* update README and CHROMEWEBSTORE with new screenshots and demo video links; add brag-output to .gitignore ([e3851ca](https://github.com/AtaCanYmc/bom-tr/commit/e3851ca1a1a2aad04737416b05a1427f7a8ecffe))
+
 ## [0.1.4](https://github.com/AtaCanYmc/bom-tr/compare/v0.1.3...v0.1.4) (2026-11-23)
 
 

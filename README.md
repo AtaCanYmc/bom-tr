@@ -63,7 +63,8 @@ bom-tr/
 ├── docs/
 │   ├── README.md             # Belge dizini
 │   ├── architecture.md       # MV3 katmanları, mesaj akışı ve DOM adaptörleri
-│   ├── bom-contract.md       # 10 alanlı BOM sözleşmesi ve dışa aktarım kuralları
+│   ├── bom-contract.md       # 10 alanlı BOM sözleşmesi, KiCad/EasyEDA CSV ve dışa aktarım
+│   ├── privacy.md            # Chrome Web Store gizlilik politikası ve veri sınırı
 │   └── robo-api.md           # API uç noktaları, kargo varsayılanları ve çevrimdışı arama
 ├── public/
 │   ├── icons/                # 16px, 48px, 128px eklenti simgeleri
@@ -79,9 +80,10 @@ bom-tr/
 │   │   └── parser.ts         # JSON-LD okuyucu, TL fiyat ayrıştırıcı ve stok algılayıcı
 │   ├── shared/
 │   │   ├── bom.ts            # 10 alanlı BomItem tipleri, aday kanıt ve proje modelleri
-│   │   ├── exporters.ts      # Saf 10 alanlı JSON, Markdown ve CSV dışa aktarıcılar
+│   │   ├── exporters.ts      # 10 alanlı JSON, Markdown, CSV ve KiCad/EasyEDA CSV dönüştürücüler
+│   │   ├── i18n.ts           # TR, EN, FR, DE, ES arayüz çeviri sözlüğü
 │   │   ├── messages.ts       # Katmanlar arası mesaj tipleri
-│   │   ├── stores.ts         # 6 mağaza tanımı, kargo eşikleri ve ?q= arama adresleri
+│   │   ├── stores.ts         # 6 mağaza tanımı, kargo eşikleri, URL doğrulama ve ?q= arama
 │   │   └── validator.ts      # 10 alanlı bom-sourcing JSON doğrulayıcısı
 │   └── sidepanel/
 │       ├── components/       # BomTab, CaptureCompareTab, CartTab, BridgeTab, SettingsTab
@@ -91,11 +93,15 @@ bom-tr/
 │       ├── main.tsx          # React 19 giriş noktası
 │       └── store.ts          # chrome.storage.local ile kalıcı Zustand deposu
 ├── tests/
-│   └── bom.test.ts           # Şema, dışa aktarım, fiyat ayrıştırma ve sepet hesabı testleri
+│   ├── fixtures/             # 6 Türk elektronik mağazası için kaydedilmiş HTML test örnekleri
+│   ├── bom.test.ts           # Şema, KiCad/EasyEDA CSV, adaptör, güvenlik ve sepet testleri
+│   └── domFixture.ts         # Node testleri için bağımlılıksız HTML DOM seçici yardımcısı
 ├── .editorconfig
 ├── .gitattributes
 ├── .markdownlint.json
 ├── .release-please-manifest.json
+├── CHANGELOG.md
+├── CHROMEWEBSTORE.md
 ├── CONTRIBUTING.md
 ├── LICENSE
 ├── Makefile
@@ -128,6 +134,7 @@ bom-tr/
 - [Mimari ve Mesaj Akışı](docs/architecture.md)
 - [10 Alanlı BOM Sözleşmesi](docs/bom-contract.md)
 - [robo-api ve Çevrimdışı Kullanım](docs/robo-api.md)
+- [Gizlilik Politikası](docs/privacy.md)
 
 ## Doğrulama ve Paketleme
 

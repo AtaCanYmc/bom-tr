@@ -63,7 +63,8 @@ bom-tr/
 ├── docs/
 │   ├── README.md             # Documentation index
 │   ├── architecture.md       # MV3 layers, message flow, and DOM adapter isolation
-│   ├── bom-contract.md       # 10-field BOM schema contract and export formats
+│   ├── bom-contract.md       # 10-field BOM contract, KiCad/EasyEDA CSV, and export formats
+│   ├── privacy.md            # Chrome Web Store privacy policy and local-first data boundary
 │   └── robo-api.md           # REST endpoints, shipping defaults, and offline fallback
 ├── public/
 │   ├── icons/                # 16px, 48px, 128px extension icons
@@ -79,9 +80,10 @@ bom-tr/
 │   │   └── parser.ts         # JSON-LD reader, Turkish price parser, stock classifier
 │   ├── shared/
 │   │   ├── bom.ts            # 10-field BomItem contract, candidate evidence, project types
-│   │   ├── exporters.ts      # Pure 10-field JSON, Markdown, and CSV exporters
+│   │   ├── exporters.ts      # Pure 10-field JSON, Markdown, CSV, and KiCad/EasyEDA CSV codecs
+│   │   ├── i18n.ts           # TR, EN, FR, DE, ES localization dictionary
 │   │   ├── messages.ts       # Typed extension message contracts
-│   │   ├── stores.ts         # 6 store definitions, shipping defaults, ?q= URL builders
+│   │   ├── stores.ts         # 6 store definitions, shipping defaults, URL sanitizer, ?q= URLs
 │   │   └── validator.ts      # Runtime 10-field bom-sourcing JSON validator
 │   └── sidepanel/
 │       ├── components/       # BomTab, CaptureCompareTab, CartTab, BridgeTab, SettingsTab
@@ -91,11 +93,15 @@ bom-tr/
 │       ├── main.tsx          # React 19 entry point
 │       └── store.ts          # Zustand state persisted to chrome.storage.local
 ├── tests/
-│   └── bom.test.ts           # Node built-in test runner checks for schema, parser, cart math
+│   ├── fixtures/             # Saved HTML snapshots for all 6 Turkish electronics stores
+│   ├── bom.test.ts           # Schema, KiCad/EasyEDA CSV, adapter, security, and cart tests
+│   └── domFixture.ts         # Zero-dependency HTML DOM query shim for Node tests
 ├── .editorconfig
 ├── .gitattributes
 ├── .markdownlint.json
 ├── .release-please-manifest.json
+├── CHANGELOG.md
+├── CHROMEWEBSTORE.md
 ├── CONTRIBUTING.md
 ├── LICENSE
 ├── Makefile
@@ -128,6 +134,7 @@ Only sanitized component search queries and BOM item quantities are sent to `rob
 - [Architecture and Message Flow](docs/architecture.md)
 - [10-Field BOM Contract](docs/bom-contract.md)
 - [robo-api and Offline Fallback](docs/robo-api.md)
+- [Privacy Policy](docs/privacy.md)
 
 ## Verification and Packaging
 

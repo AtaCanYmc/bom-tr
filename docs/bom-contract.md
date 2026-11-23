@@ -25,7 +25,8 @@ Fiyat, stok, mağaza, URL ve gözlem zamanı (`observedAt`) bilgileri `BomItem` 
 
 - JSON dışa aktarımı (`exportBomAsJson`) yalnızca saf 10 alanlı `BomItem[]` dizisi üretir.
 - Markdown dışa aktarımı (`exportBomAsMarkdown`) tablo sütununda seçili kanıt özetini gösterir.
-- CSV dışa aktarımı (`exportBomAsCsv`) RFC-4180 kaçış kurallarıyla 10 sütun üretir.
+- CSV dışa aktarımı (`exportBomAsCsv`) RFC-4180 kaçış kuralları ve formül enjeksiyon korumasıyla 10 sütun üretir.
+- KiCad ve EasyEDA CSV içe/dışa aktarımı (`parseBomCsv`, `exportBomAsKicadCsv`, `exportBomAsEasyedaCsv`) CAD tablolarını 10 alanlı sözleşmeye eşler.
 
 ## Eşleşme Onay Kilidi
 

@@ -48,11 +48,13 @@ Turkish (with built-in English, French, German, and Spanish UI)
 | Asset | Dimensions | Status | Filename |
 | :--- | :--- | :--- | :--- |
 | Store Icon [REQUIRED] | 128x128 PNG | Ready | `public/icons/icon-128.png` |
-| Screenshot 1 [REQUIRED] | 1280x800 or 640x400 | Not created | `BOM workbench (dark & light)` |
-| Screenshot 2 [RECOMMENDED] | 1280x800 or 640x400 | Not created | `Store page capture & 5-store compare` |
-| Screenshot 3 [RECOMMENDED] | 1280x800 or 640x400 | Not created | `Single vs split cart optimization` |
-| Screenshot 4 | 1280x800 or 640x400 | Not created | `Bridge JSON / KiCad / EasyEDA import & export` |
-| Small Promo Tile [RECOMMENDED] | 440x280 | Not created | |
+| Screenshot 1 [REQUIRED] | Live Chrome Side Panel | Ready | `docs/assets/screenshot-capture.jpg` |
+| Screenshot 2 [RECOMMENDED] | Live Chrome Side Panel | Ready | `docs/assets/screenshot-bridge.jpg` |
+| Screenshot 3 [RECOMMENDED] | Live Chrome Side Panel | Ready | `docs/assets/screenshot-settings.jpg` |
+| Promo Banner 1 | 16:9 JPG | Ready | `docs/assets/banner-hero.jpg` |
+| Promo Banner 2 | 16:9 JPG | Ready | `docs/assets/banner-cart.jpg` |
+| Promo Banner 3 | 16:9 JPG | Ready | `docs/assets/banner-compare.jpg` |
+| Demo Video [RECOMMENDED] | YouTube | Ready | `https://www.youtube.com/watch?v=l9TjYiBdo7w` |
 
 ### Screenshot Notes
 Capture Chrome with a supported store product page open on the left and the `bomTR` Side Panel open on the right at 1280x800. Include one light-theme shot and one dark-theme shot.

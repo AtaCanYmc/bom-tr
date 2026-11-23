@@ -21,3 +21,9 @@
 | [CONTRIBUTING.md](../CONTRIBUTING.md) | Geliştirme akışı, Conventional Commits kuralları ve PR doğrulama adımları. |
 | [ROADMAP.md](../ROADMAP.md) | Sürüm hedeflerine göre planlanan teknik teslimatlar. |
 | [LICENSE](../LICENSE) | MIT lisans metni. |
+
+## Görseller
+
+| Yakalama | Köprü | Ayarlar |
+| :---: | :---: | :---: |
+| ![Yakala](assets/screenshot-capture.jpg) | ![Köprü](assets/screenshot-bridge.jpg) | ![Ayar](assets/screenshot-settings.jpg) |

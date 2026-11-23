@@ -8,10 +8,15 @@
 
 [Türkçe](README.md) | English
 
+[![bomTR Launch Demo Video](docs/assets/banner-hero.jpg)](https://www.youtube.com/watch?v=l9TjYiBdo7w)
+
+[Watch Demo Video (YouTube)](https://www.youtube.com/watch?v=l9TjYiBdo7w)
+
 Manifest V3 Chrome Side Panel extension for managing 10-field `bom-sourcing` Bills of Materials and comparing live component prices across six Turkish electronics stores via `robo-api` or offline `?q=...` search fallback.
 
 ## Table of Contents
 
+- [Screenshots](#screenshots)
 - [Architecture](#architecture)
 - [Quick Start](#quick-start)
 - [Repository Layout](#repository-layout)
@@ -20,6 +25,16 @@ Manifest V3 Chrome Side Panel extension for managing 10-field `bom-sourcing` Bil
 - [Verification and Packaging](#verification-and-packaging)
 - [Technical FAQ](#technical-faq)
 - [Governance and License](#governance-and-license)
+
+## Screenshots
+
+| Active Store DOM Capture (`Capture`) | JSON / KiCad / EasyEDA (`Bridge`) |
+| :---: | :---: |
+| ![Live store capture on Direnç.net](docs/assets/screenshot-capture.jpg) | ![KiCad and EasyEDA CSV import and export](docs/assets/screenshot-bridge.jpg) |
+
+| Settings, 5 Languages & Offline Search (`Settings`) | Single vs Split Cart Overview |
+| :---: | :---: |
+| ![Settings and 6-store offline fallback](docs/assets/screenshot-settings.jpg) | ![bomTR cart comparison overview](docs/assets/banner-compare.jpg) |
 
 ## Architecture
 
@@ -61,6 +76,7 @@ bom-tr/
 │   ├── CODEOWNERS            # Review routing rules
 │   └── dependabot.yml        # Weekly npm and GitHub Actions updates
 ├── docs/
+│   ├── assets/               # Screenshots and release banners
 │   ├── README.md             # Documentation index
 │   ├── architecture.md       # MV3 layers, message flow, and DOM adapter isolation
 │   ├── bom-contract.md       # 10-field BOM contract, KiCad/EasyEDA CSV, and export formats

@@ -8,10 +8,15 @@
 
 Türkçe | [English](README.en.md)
 
+[![bomTR Tanıtım Videosu](docs/assets/banner-hero.jpg)](https://www.youtube.com/watch?v=l9TjYiBdo7w)
+
+[Tanıtım Videosunu İzle (YouTube)](https://www.youtube.com/watch?v=l9TjYiBdo7w)
+
 `bomTR`, 10 alanlı `bom-sourcing` malzeme listelerini (BOM) tarayıcı yan panelinde yönetmek ve Türkiye'deki 6 elektronik bileşen mağazasında fiyat/stok kıyaslamak için geliştirilmiş bir Chrome Manifest V3 eklentisidir. Yerel `robo-api` servisiyle çalışır; API kapalıyken de yerel düzenleme ve 6 mağazada `?q=...` arama sekmeleriyle kullanılabilir.
 
 ## İçindekiler
 
+- [Ekran Görüntüleri](#ekran-görüntüleri)
 - [Nasıl Çalışır?](#nasıl-çalışır)
 - [Kurulum ve Hızlı Başlangıç](#kurulum-ve-hızlı-başlangıç)
 - [Proje Yapısı](#proje-yapısı)
@@ -20,6 +25,16 @@ Türkçe | [English](README.en.md)
 - [Doğrulama ve Paketleme](#doğrulama-ve-paketleme)
 - [Sık Sorulan Sorular](#sık-sorulan-sorular)
 - [Katkı ve Lisans](#katkı-ve-lisans)
+
+## Ekran Görüntüleri
+
+| Aktif Mağaza Yakalama (`Yakala`) | JSON / KiCad / EasyEDA (`Köprü`) |
+| :---: | :---: |
+| ![Direnç.net ürün yakalama](docs/assets/screenshot-capture.jpg) | ![KiCad ve EasyEDA CSV içe/dışa aktarım](docs/assets/screenshot-bridge.jpg) |
+
+| Ayarlar, 5 Dil ve Offline Arama (`Ayar`) | Tek Mağaza ve Bölünmüş Sepet Özeti |
+| :---: | :---: |
+| ![Ayarlar ve offline 6 mağaza araması](docs/assets/screenshot-settings.jpg) | ![bomTR sepet kıyaslama görünümü](docs/assets/banner-compare.jpg) |
 
 ## Nasıl Çalışır?
 
@@ -61,6 +76,7 @@ bom-tr/
 │   ├── CODEOWNERS            # İnceleme sorumluluğu tanımları
 │   └── dependabot.yml        # Haftalık npm ve GitHub Actions güncellemeleri
 ├── docs/
+│   ├── assets/               # Ekran görüntüleri ve tanıtım görselleri
 │   ├── README.md             # Belge dizini
 │   ├── architecture.md       # MV3 katmanları, mesaj akışı ve DOM adaptörleri
 │   ├── bom-contract.md       # 10 alanlı BOM sözleşmesi, KiCad/EasyEDA CSV ve dışa aktarım

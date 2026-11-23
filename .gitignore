@@ -6,3 +6,7 @@ release/
 *.log
 .env
 .env.*
+
+# Brag launch video outputs & intermediates
+brag-output/
+brag-output-*/

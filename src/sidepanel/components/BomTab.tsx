@@ -22,6 +22,7 @@ import {
   type StockStatus,
   type WorkspaceBomItem,
 } from '../../shared/bom';
+import { t } from '../../shared/i18n';
 import { buildFallbackSearchUrls } from '../../shared/stores';
 import { sendBackgroundMessage } from '../chromeBridge';
 import { useWorkspaceStore } from '../store';
@@ -107,6 +108,8 @@ export function BomTab() {
   const project = projects.find((p) => p.id === activeProjectId);
   if (!project) return null;
 
+  const loc = settings.locale;
+
   const isAttention = (item: WorkspaceBomItem) =>
     item.bom.status === 'inferred_required' || item.bom.match_confidence === 'ambiguous';
 
@@ -181,8 +184,8 @@ export function BomTab() {
           type="text"
           value={newPartName}
           onChange={(e) => setNewPartName(e.target.value)}
-          aria-label="Yeni bileşen adı"
-          placeholder="Bileşen ekle (örn. AMS1117 3.3V)"
+          aria-label={t(loc, 'addPartPlaceholder')}
+          placeholder={t(loc, 'addPartPlaceholder')}
           className="wb-input flex-1 px-2.5 py-2 text-xs"
         />
         <button
@@ -191,7 +194,7 @@ export function BomTab() {
           className="wb-btn-primary inline-flex items-center gap-1 px-3 py-2 text-xs"
         >
           <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-          Ekle
+          {t(loc, 'add')}
         </button>
       </form>
 
@@ -201,14 +204,14 @@ export function BomTab() {
             <strong className="font-mono-tech tabular-nums text-[var(--text-primary)]">
               {project.items.length}
             </strong>{' '}
-            kalem
+            {t(loc, 'itemsUnit')}
           </span>
           <span aria-hidden="true">/</span>
           <span>
             <strong className="font-mono-tech tabular-nums text-[var(--status-ok)]">
               {lockedCount}
             </strong>{' '}
-            onaylı
+            {t(loc, 'approvedUnit')}
           </span>
         </div>
 
@@ -232,7 +235,7 @@ export function BomTab() {
           }
         >
           <AlertTriangle className="h-3 w-3" aria-hidden="true" />
-          İnceleme (<span className="font-mono-tech tabular-nums">{attentionCount}</span>)
+          {t(loc, 'reviewFilter')} (<span className="font-mono-tech tabular-nums">{attentionCount}</span>)
         </button>
       </div>
 
@@ -246,8 +249,8 @@ export function BomTab() {
             type="search"
             value={filterText}
             onChange={(e) => setFilterText(e.target.value)}
-            aria-label="BOM listesinde filtrele"
-            placeholder="Listede filtrele..."
+            aria-label={t(loc, 'filterPlaceholder')}
+            placeholder={t(loc, 'filterPlaceholder')}
             className="wb-input w-full py-1.5 pl-7 pr-2.5 text-[11px]"
           />
         </div>
@@ -283,7 +286,7 @@ export function BomTab() {
                     {bom.canonical_name}
                   </button>
                   <div className="mt-0.5 truncate text-[11px] text-[var(--text-muted)]">
-                    Ham: {bom.raw_name}
+                    {t(loc, 'rawPrefix')}: {bom.raw_name}
                   </div>
                 </div>
 
@@ -349,7 +352,7 @@ export function BomTab() {
                     }}
                   >
                     <Lock className="h-2.5 w-2.5" aria-hidden="true" />
-                    Onaylı
+                    {t(loc, 'approvedBadge')}
                   </span>
                 )}
               </div>
@@ -361,14 +364,14 @@ export function BomTab() {
                     <strong className="font-mono-tech tabular-nums text-[var(--text-primary)]">
                       {selected.unitPrice !== null
                         ? `${selected.unitPrice.toFixed(2)} ${selected.currency}`
-                        : 'Fiyat yok'}
+                        : t(loc, 'noPrice')}
                     </strong>
                   </span>
                   <a
                     href={selected.url}
                     target="_blank"
                     rel="noreferrer"
-                    aria-label={`${selected.title} ürün sayfasını aç`}
+                    aria-label={`${selected.title}`}
                     className="shrink-0 text-[var(--accent)] hover:underline"
                   >
                     <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
@@ -384,7 +387,7 @@ export function BomTab() {
                   className="wb-btn-secondary inline-flex items-center gap-1 px-2 py-1 text-[11px]"
                 >
                   <Search className="h-3 w-3" aria-hidden="true" />
-                  {searchingId === entry.id ? 'Aranıyor...' : 'API Ara'}
+                  {searchingId === entry.id ? t(loc, 'searching') : t(loc, 'apiSearch')}
                 </button>
                 <button
                   type="button"
@@ -394,7 +397,7 @@ export function BomTab() {
                   className="wb-btn-secondary inline-flex items-center gap-1 px-2 py-1 text-[11px]"
                 >
                   <ExternalLink className="h-3 w-3" aria-hidden="true" />
-                  6 Mağaza (?q=)
+                  {t(loc, 'storesFallback')}
                 </button>
                 <button
                   type="button"
@@ -402,7 +405,9 @@ export function BomTab() {
                   aria-expanded={expanded}
                   className="wb-btn-ghost ml-auto inline-flex items-center gap-0.5 px-1.5 py-1 text-[11px]"
                 >
-                  <span>{expanded ? 'Gizle' : `Detay (${entry.candidates.length})`}</span>
+                  <span>
+                    {expanded ? t(loc, 'hide') : `${t(loc, 'details')} (${entry.candidates.length})`}
+                  </span>
                   {expanded ? (
                     <ChevronUp className="h-3 w-3" aria-hidden="true" />
                   ) : (
@@ -415,7 +420,9 @@ export function BomTab() {
                 <div className="mt-3 space-y-2.5 border-t border-[var(--border-subtle)] pt-2.5">
                   <div className="grid grid-cols-3 gap-1.5">
                     <label className="space-y-1">
-                      <span className="block text-[10px] text-[var(--text-muted)]">Durum</span>
+                      <span className="block text-[10px] text-[var(--text-muted)]">
+                        {t(loc, 'statusLabel')}
+                      </span>
                       <select
                         value={bom.status}
                         onChange={(e) =>
@@ -564,13 +571,13 @@ export function BomTab() {
           <div className="wb-card border-dashed p-5 text-center">
             <p className="text-xs font-medium text-[var(--text-primary)]">
               {onlyAttention || queryNorm
-                ? 'Filtreyle eşleşen BOM kalemi bulunamadı.'
-                : 'Bu projede henüz BOM kalemi yok.'}
+                ? t(loc, 'emptyFilteredTitle')
+                : t(loc, 'emptyProjectTitle')}
             </p>
             <p className="mt-1 text-[11px] text-[var(--text-muted)]">
               {onlyAttention || queryNorm
-                ? 'Tüm kalemleri görmek için etkin filtreyi temizleyin.'
-                : 'Yukarıdan yeni bileşen ekleyin, mağaza sayfasından yakalayın veya örnek listeyi yükleyin.'}
+                ? t(loc, 'emptyFilteredBody')
+                : t(loc, 'emptyProjectBody')}
             </p>
             <div className="mt-3 flex justify-center gap-2">
               {onlyAttention || queryNorm ? (
@@ -582,7 +589,7 @@ export function BomTab() {
                   }}
                   className="wb-btn-secondary px-3 py-1.5 text-[11px]"
                 >
-                  Filtreyi Temizle
+                  {t(loc, 'clearFilter')}
                 </button>
               ) : (
                 <button
@@ -590,7 +597,7 @@ export function BomTab() {
                   onClick={() => importItems(createSampleBomItems(), 'replace')}
                   className="wb-btn-secondary px-3 py-1.5 text-[11px]"
                 >
-                  Örnek ESP32 BOM Yükle
+                  {t(loc, 'loadSampleBom')}
                 </button>
               )}
             </div>

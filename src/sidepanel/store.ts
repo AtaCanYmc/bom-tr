@@ -50,6 +50,10 @@ export interface WorkspaceState {
   selectProject: (projectId: string) => void;
   createProject: (name: string, initialItems?: BomItem[]) => string;
   renameProject: (projectId: string, name: string) => void;
+  updateProjectSettings: (
+    projectId: string,
+    patch: { currency?: string; freeShippingThreshold?: number | null },
+  ) => void;
   deleteProject: (projectId: string) => void;
 
   addItem: (bom?: BomItem, candidates?: CandidateEvidence[]) => void;
@@ -198,6 +202,16 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     set((state) => {
       const projects = state.projects.map((p) =>
         p.id === projectId ? { ...p, name: clean, updatedAt: new Date().toISOString() } : p,
+      );
+      persistAndSyncBadge({ projects, activeProjectId: state.activeProjectId, settings: state.settings });
+      return { projects };
+    });
+  },
+
+  updateProjectSettings: (projectId, patch) => {
+    set((state) => {
+      const projects = state.projects.map((p) =>
+        p.id === projectId ? { ...p, ...patch, updatedAt: new Date().toISOString() } : p,
       );
       persistAndSyncBadge({ projects, activeProjectId: state.activeProjectId, settings: state.settings });
       return { projects };

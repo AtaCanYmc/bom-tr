@@ -75,11 +75,16 @@ export interface WorkspaceBomItem {
   selectionLocked: boolean;
 }
 
+export type Locale = 'tr' | 'en' | 'fr' | 'de' | 'es';
+export const SUPPORTED_LOCALES: readonly Locale[] = ['tr', 'en', 'fr', 'de', 'es'] as const;
+
 export interface BomProject {
   id: string;
   name: string;
   createdAt: string;
   updatedAt: string;
+  currency?: string;
+  freeShippingThreshold?: number | null;
   items: WorkspaceBomItem[];
 }
 
@@ -91,6 +96,7 @@ export interface ExtensionSettings {
   currency: string;
   batchTabDelayMs: number;
   theme: ThemeMode;
+  locale: Locale;
 }
 
 export interface ApiHealthStatus {
@@ -164,6 +170,7 @@ export const DEFAULT_SETTINGS: ExtensionSettings = {
   currency: 'TRY',
   batchTabDelayMs: 350,
   theme: 'dark',
+  locale: 'tr',
 };
 
 export function createEmptyBomItem(name = 'Yeni Bileşen'): BomItem {

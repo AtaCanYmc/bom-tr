@@ -17,6 +17,7 @@
 | Belge | Kapsam |
 | :--- | :--- |
 | [SECURITY.md](../SECURITY.md) | Desteklenen sürümler, gizlilik sınırı, izin gerekçeleri ve güvenlik bildirimi. |
+| [Gizlilik Politikası](privacy.md) | Yerel depolama, API veri sınırı ve Chrome Web Store gizlilik beyanı. |
 | [CONTRIBUTING.md](../CONTRIBUTING.md) | Geliştirme akışı, Conventional Commits kuralları ve PR doğrulama adımları. |
 | [ROADMAP.md](../ROADMAP.md) | Sürüm hedeflerine göre planlanan teknik teslimatlar. |
 | [LICENSE](../LICENSE) | MIT lisans metni. |

@@ -13,6 +13,7 @@ export type BackgroundRequest =
       apiBaseUrl: string;
       items: Array<{ query: string; quantity: number }>;
       localCandidatesByQuery?: Record<string, CandidateEvidence[]>;
+      overrides?: { currency?: string; freeShippingThreshold?: number | null };
     }
   | { type: 'CAPTURE_ACTIVE_TAB' }
   | { type: 'OPEN_TABS_STAGGERED'; urls: string[]; delayMs?: number }

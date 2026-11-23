@@ -167,15 +167,28 @@ export async function searchComponent(
   return { candidates, observedAt };
 }
 
-function shippingForStore(storeKey: string, subtotal: number): {
+export interface CartPricingOverrides {
+  currency?: string;
+  freeShippingThreshold?: number | null;
+}
+
+function shippingForStore(
+  storeKey: string,
+  subtotal: number,
+  thresholdOverride?: number | null,
+): {
   fee: number;
   threshold: number | null;
 } {
   const normalized = normalizeStoreId(storeKey);
-  if (!normalized) return { fee: 39.9, threshold: 1500 };
-  const store = STORES[normalized];
-  const fee = subtotal >= store.defaultFreeShippingMinTry ? 0 : store.defaultShippingTry;
-  return { fee, threshold: store.defaultFreeShippingMinTry };
+  const baseFee = normalized ? STORES[normalized].defaultShippingTry : 39.9;
+  const defaultThreshold = normalized ? STORES[normalized].defaultFreeShippingMinTry : 1500;
+  const threshold =
+    typeof thresholdOverride === 'number' && Number.isFinite(thresholdOverride) && thresholdOverride >= 0
+      ? thresholdOverride
+      : defaultThreshold;
+  const fee = subtotal >= threshold ? 0 : baseFee;
+  return { fee, threshold };
 }
 
 // Evaluates single-store vs greedy split-store totals across observed candidates.
@@ -183,9 +196,12 @@ function shippingForStore(storeKey: string, subtotal: number): {
 export function computeCartScenarios(
   items: Array<{ query: string; quantity: number }>,
   candidatesByQuery: Record<string, CandidateEvidence[]>,
+  overrides?: CartPricingOverrides,
 ): { singleStore: CartScenario | null; splitStore: CartScenario | null } {
   const requestedCount = items.length;
   if (requestedCount === 0) return { singleStore: null, splitStore: null };
+  const currency = overrides?.currency?.trim() || 'TRY';
+  const thresholdOverride = overrides?.freeShippingThreshold;
 
   const storeIds = new Set<string>();
   for (const list of Object.values(candidatesByQuery)) {
@@ -230,7 +246,7 @@ export function computeCartScenarios(
 
     if (matchedLines.length === 0) continue;
     const subtotal = matchedLines.reduce((sum, l) => sum + l.lineTotal, 0);
-    const { fee, threshold } = shippingForStore(store, subtotal);
+    const { fee, threshold } = shippingForStore(store, subtotal, thresholdOverride);
     const scenario: CartScenario = {
       kind: 'single_store',
       label: `Tek Mağaza (${store})`,
@@ -247,7 +263,7 @@ export function computeCartScenarios(
       itemsSubtotal: subtotal,
       shippingTotal: fee,
       grandTotal: subtotal + fee,
-      currency: 'TRY',
+      currency,
       coverageCount: matchedLines.length,
       requestedCount,
       missingItems: missing,
@@ -297,7 +313,7 @@ export function computeCartScenarios(
     const stores: StoreCartBreakdown[] = [];
     for (const [store, lines] of grouped.entries()) {
       const subtotal = lines.reduce((sum, l) => sum + l.lineTotal, 0);
-      const { fee, threshold } = shippingForStore(store, subtotal);
+      const { fee, threshold } = shippingForStore(store, subtotal, thresholdOverride);
       stores.push({
         store,
         subtotal,
@@ -316,7 +332,7 @@ export function computeCartScenarios(
       itemsSubtotal,
       shippingTotal,
       grandTotal: itemsSubtotal + shippingTotal,
-      currency: 'TRY',
+      currency,
       coverageCount: requestedCount - splitMissing.length,
       requestedCount,
       missingItems: splitMissing,
@@ -331,6 +347,7 @@ export async function optimizeCart(
   apiBaseUrl: string,
   items: Array<{ query: string; quantity: number }>,
   localCandidatesByQuery: Record<string, CandidateEvidence[]> = {},
+  overrides?: CartPricingOverrides,
 ): Promise<CartOptimizationResult> {
   const observedAt = new Date().toISOString();
   const warnings: string[] = [];
@@ -409,7 +426,7 @@ export async function optimizeCart(
     }
   }
 
-  const { singleStore, splitStore } = computeCartScenarios(cleanItems, mergedCandidates);
+  const { singleStore, splitStore } = computeCartScenarios(cleanItems, mergedCandidates, overrides);
 
   let winningLabel: string | null = null;
   if (singleStore && splitStore) {

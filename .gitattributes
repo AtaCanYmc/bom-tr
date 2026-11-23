@@ -26,3 +26,4 @@ Makefile text eol=lf
 .gitattributes export-ignore
 .editorconfig export-ignore
 .markdownlint.json export-ignore
+CHROMEWEBSTORE.md export-ignore

@@ -1,6 +1,7 @@
 import { AlertCircle, ExternalLink, PlusCircle, Radar, ScanSearch } from 'lucide-react';
 import { useState } from 'react';
 import type { CandidateEvidence } from '../../shared/bom';
+import { t } from '../../shared/i18n';
 import { STORE_LIST, buildFallbackSearchUrls } from '../../shared/stores';
 import { sendBackgroundMessage } from '../chromeBridge';
 import { useWorkspaceStore } from '../store';
@@ -12,6 +13,7 @@ export function CaptureCompareTab() {
   const [loadingCompare, setLoadingCompare] = useState(false);
   const [compared, setCompared] = useState<CandidateEvidence[]>([]);
   const [compareObservedAt, setCompareObservedAt] = useState<string | null>(null);
+  const loc = settings.locale;
 
   const handleCapture = async () => {
     setLoadingCapture(true);
@@ -83,10 +85,10 @@ export function CaptureCompareTab() {
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
             <h2 className="m-0 text-[13px] font-semibold text-[var(--text-primary)]">
-              Aktif Mağaza Sayfası
+              {t(loc, 'activeStoreTitle')}
             </h2>
             <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
-              Desteklenen 6 mağazada ürün, fiyat ve stok bilgisini DOM üzerinden okur.
+              {t(loc, 'activeStoreDesc')}
             </p>
           </div>
           <button
@@ -96,16 +98,13 @@ export function CaptureCompareTab() {
             className="wb-btn-primary inline-flex shrink-0 items-center gap-1.5 px-3 py-1.5 text-xs"
           >
             <ScanSearch className="h-3.5 w-3.5" aria-hidden="true" />
-            {loadingCapture ? 'Okunuyor...' : 'Sayfadan Oku'}
+            {loadingCapture ? t(loc, 'reading') : t(loc, 'readPage')}
           </button>
         </div>
 
         {!lastCapture ? (
           <div className="wb-inset mt-3 p-3">
-            <p className="text-[11px] text-[var(--text-secondary)]">
-              Henüz sayfa okunmadı. Desteklenen bir mağazada ürün sayfasını açıp{' '}
-              <strong>Sayfadan Oku</strong> düğmesine basın.
-            </p>
+            <p className="text-[11px] text-[var(--text-secondary)]">{t(loc, 'noCaptureYet')}</p>
             <div className="mt-2 flex flex-wrap gap-1">
               {STORE_LIST.map((store) => (
                 <span

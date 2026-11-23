@@ -1,6 +1,6 @@
 import type { PageCaptureResult, StockStatus } from '../shared/bom';
-import { STORES, type StoreId } from '../shared/stores';
-import { inferStockFromText, parseTurkishPrice, readJsonLdProduct } from './parser';
+import { STORES, type StoreId } from '../shared/stores.ts';
+import { inferStockFromText, parseTurkishPrice, readJsonLdProduct } from './parser.ts';
 
 export interface StoreDomAdapter {
   storeId: StoreId;

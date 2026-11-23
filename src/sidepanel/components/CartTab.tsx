@@ -1,17 +1,29 @@
 import { AlertTriangle, Calculator, ExternalLink } from 'lucide-react';
 import { useState } from 'react';
 import type { CandidateEvidence, CartScenario } from '../../shared/bom';
+import { t } from '../../shared/i18n';
 import { sendBackgroundMessage } from '../chromeBridge';
 import { useWorkspaceStore } from '../store';
 
 export function CartTab() {
-  const { projects, activeProjectId, settings, lastOptimization, setLastOptimization, setNotice } =
-    useWorkspaceStore();
+  const {
+    projects,
+    activeProjectId,
+    settings,
+    lastOptimization,
+    setLastOptimization,
+    updateProjectSettings,
+    setNotice,
+  } = useWorkspaceStore();
   const [includeOptional, setIncludeOptional] = useState(false);
   const [running, setRunning] = useState(false);
 
   const project = projects.find((p) => p.id === activeProjectId);
   if (!project) return null;
+
+  const loc = settings.locale;
+  const effectiveCurrency = project.currency?.trim() || settings.currency;
+  const effectiveThreshold = project.freeShippingThreshold ?? null;
 
   const eligibleItems = project.items.filter((entry) =>
     includeOptional ? true : entry.bom.status !== 'optional_or_assumed',
@@ -42,6 +54,10 @@ export function CartTab() {
       apiBaseUrl: settings.apiBaseUrl,
       items: requestItems,
       localCandidatesByQuery,
+      overrides: {
+        currency: effectiveCurrency,
+        freeShippingThreshold: effectiveThreshold,
+      },
     });
     setRunning(false);
 
@@ -61,7 +77,7 @@ export function CartTab() {
       delayMs: settings.batchTabDelayMs,
     });
     if (res.ok && 'openedCount' in res) {
-      setNotice(`${scenario.label} için ${res.openedCount} ürün sekmesi kontrollü açıldı.`);
+      setNotice(`${scenario.label}: ${res.openedCount} tabs opened.`);
     }
   };
 
@@ -72,25 +88,25 @@ export function CartTab() {
           {scenario.label}
         </h3>
         <span className="font-mono-tech tabular-nums rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-1.5 py-0.5 text-[10px] text-[var(--text-secondary)]">
-          Kapsama: {scenario.coverageCount}/{scenario.requestedCount}
+          {t(loc, 'coverageLabel')}: {scenario.coverageCount}/{scenario.requestedCount}
         </span>
       </div>
 
       <div className="wb-inset mt-2.5 grid grid-cols-3 gap-2 p-2.5 text-center text-[11px]">
         <div>
-          <div className="text-[10px] text-[var(--text-muted)]">Ara Toplam</div>
+          <div className="text-[10px] text-[var(--text-muted)]">{t(loc, 'subtotalLabel')}</div>
           <div className="font-mono-tech tabular-nums font-medium text-[var(--text-primary)]">
             {scenario.itemsSubtotal.toFixed(2)} {scenario.currency}
           </div>
         </div>
         <div>
-          <div className="text-[10px] text-[var(--text-muted)]">Kargo</div>
+          <div className="text-[10px] text-[var(--text-muted)]">{t(loc, 'shippingLabel')}</div>
           <div className="font-mono-tech tabular-nums font-medium text-[var(--text-primary)]">
             {scenario.shippingTotal.toFixed(2)} {scenario.currency}
           </div>
         </div>
         <div>
-          <div className="text-[10px] text-[var(--text-muted)]">Genel Toplam</div>
+          <div className="text-[10px] text-[var(--text-muted)]">{t(loc, 'grandTotalLabel')}</div>
           <div
             className="font-mono-tech tabular-nums font-semibold"
             style={{ color: 'var(--status-ok)' }}
@@ -106,7 +122,7 @@ export function CartTab() {
             <div className="flex items-center justify-between gap-2 text-[11px] font-medium text-[var(--text-primary)]">
               <span className="font-mono-tech">{st.store}</span>
               <span className="font-mono-tech tabular-nums text-[var(--text-secondary)]">
-                {st.subtotal.toFixed(2)} + {st.shippingFee.toFixed(2)} kargo
+                {st.subtotal.toFixed(2)} + {st.shippingFee.toFixed(2)}
               </span>
             </div>
             <div className="mt-1 space-y-0.5 text-[10px] text-[var(--text-muted)]">
@@ -135,7 +151,7 @@ export function CartTab() {
             color: 'var(--status-warn)',
           }}
         >
-          Eksik kalemler: {scenario.missingItems.join(', ')}
+          {t(loc, 'missingItems')}: {scenario.missingItems.join(', ')}
         </div>
       )}
 
@@ -145,21 +161,22 @@ export function CartTab() {
         className="wb-btn-secondary mt-2.5 inline-flex w-full items-center justify-center gap-1.5 px-2.5 py-2 text-[11px]"
       >
         <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-        Ürün Sekmelerini Aç ({scenario.stores.reduce((n, s) => n + s.items.length, 0)})
+        {t(loc, 'openProductTabs')} ({scenario.stores.reduce((n, s) => n + s.items.length, 0)})
       </button>
     </article>
   );
 
   return (
     <div className="space-y-3 text-xs">
-      <section className="wb-card p-3">
+      <section className="wb-card space-y-2.5 p-3">
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
             <h2 className="m-0 text-[13px] font-semibold text-[var(--text-primary)]">
-              Sepet Kıyaslama
+              {t(loc, 'cartTitle')}
             </h2>
             <p className="mt-0.5 font-mono-tech tabular-nums text-[11px] text-[var(--text-muted)]">
-              {eligibleItems.length} kalem / {settings.deliveryDestination} ({settings.currency})
+              {eligibleItems.length} {t(loc, 'itemsUnit')} / {settings.deliveryDestination} (
+              {effectiveCurrency})
             </p>
           </div>
           <button
@@ -169,32 +186,70 @@ export function CartTab() {
             className="wb-btn-primary inline-flex shrink-0 items-center gap-1.5 px-3 py-1.5 text-xs"
           >
             <Calculator className="h-3.5 w-3.5" aria-hidden="true" />
-            {running ? 'Hesaplanıyor...' : 'Sepeti Optimize Et'}
+            {running ? t(loc, 'calculating') : t(loc, 'optimizeCart')}
           </button>
         </div>
 
-        <label className="mt-2.5 flex items-center gap-2 text-[11px] text-[var(--text-secondary)]">
+        <div className="grid grid-cols-2 gap-2 border-t border-[var(--border-subtle)] pt-2.5">
+          <label className="space-y-1">
+            <span className="block text-[10px] text-[var(--text-muted)]">
+              {t(loc, 'projectCurrency')}
+            </span>
+            <input
+              type="text"
+              value={project.currency ?? ''}
+              placeholder={settings.currency}
+              onChange={(e) =>
+                updateProjectSettings(project.id, {
+                  currency: e.target.value.toUpperCase() || undefined,
+                })
+              }
+              className="wb-input font-mono-tech w-full px-2 py-1 text-xs"
+            />
+          </label>
+          <label className="space-y-1">
+            <span className="block text-[10px] text-[var(--text-muted)]">
+              {t(loc, 'freeShippingLimit')}
+            </span>
+            <input
+              type="number"
+              min={0}
+              step={50}
+              value={effectiveThreshold ?? ''}
+              placeholder={`${t(loc, 'defaultHint')} (1500)`}
+              onChange={(e) => {
+                const raw = e.target.value.trim();
+                if (!raw) {
+                  updateProjectSettings(project.id, { freeShippingThreshold: null });
+                  return;
+                }
+                const n = Number.parseFloat(raw);
+                if (Number.isFinite(n) && n >= 0) {
+                  updateProjectSettings(project.id, { freeShippingThreshold: n });
+                }
+              }}
+              className="wb-input font-mono-tech tabular-nums w-full px-2 py-1 text-xs"
+            />
+          </label>
+        </div>
+
+        <label className="flex items-center gap-2 text-[11px] text-[var(--text-secondary)]">
           <input
             type="checkbox"
             checked={includeOptional}
             onChange={(e) => setIncludeOptional(e.target.checked)}
             className="h-3.5 w-3.5 accent-[var(--accent)]"
           />
-          <span>
-            <code className="font-mono-tech">optional_or_assumed</code> kalemleri senaryoya dahil et
-          </span>
+          <span>{t(loc, 'includeOptional')}</span>
         </label>
       </section>
 
       {!lastOptimization ? (
         <div className="wb-card border-dashed p-5 text-center">
           <p className="text-xs font-medium text-[var(--text-primary)]">
-            Henüz sepet senaryosu hesaplanmadı.
+            {t(loc, 'noCartYetTitle')}
           </p>
-          <p className="mt-1 text-[11px] text-[var(--text-muted)]">
-            Tek mağaza ve bölünmüş mağaza toplamlarını kargo eşikleriyle kıyaslamak için{' '}
-            <strong>Sepeti Optimize Et</strong> düğmesine basın.
-          </p>
+          <p className="mt-1 text-[11px] text-[var(--text-muted)]">{t(loc, 'noCartYetBody')}</p>
         </div>
       ) : (
         <div className="space-y-2.5">
@@ -207,7 +262,7 @@ export function CartTab() {
                 color: 'var(--status-ok)',
               }}
             >
-              Öneri: <strong>{lastOptimization.winningLabel}</strong>
+              {t(loc, 'recommendation')}: <strong>{lastOptimization.winningLabel}</strong>
             </div>
           )}
 
@@ -230,11 +285,11 @@ export function CartTab() {
           {lastOptimization.splitStore && renderScenario(lastOptimization.splitStore)}
 
           <div className="wb-inset p-2.5 text-[10px] leading-relaxed text-[var(--text-muted)]">
-            Kaynak: <code className="font-mono-tech">{lastOptimization.source}</code> / Sorgu:{' '}
+            <code className="font-mono-tech">{lastOptimization.source}</code> /{' '}
             <span className="font-mono-tech tabular-nums">
-              {new Date(lastOptimization.observedAt).toLocaleString('tr-TR')}
+              {new Date(lastOptimization.observedAt).toLocaleString()}
             </span>
-            . Fiyat ve stoklar yalnızca sorgu anına ait kanıttır; otomatik sipariş verilmez.
+            . {t(loc, 'evidenceFootnote')}
           </div>
         </div>
       )}

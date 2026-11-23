@@ -184,6 +184,7 @@ async function handleMessage(message: BackgroundRequest): Promise<BackgroundResp
         message.apiBaseUrl,
         message.items,
         message.localCandidatesByQuery,
+        message.overrides,
       );
       return { ok: true, optimization };
     }

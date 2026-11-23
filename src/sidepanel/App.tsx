@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { PENDING_CONTEXT_ITEM_KEY } from '../background/storageKeys';
+import { SUPPORTED_LOCALES, type Locale } from '../shared/bom';
+import { LOCALE_LABELS, t, type I18nKey } from '../shared/i18n';
 import { isExtensionRuntime, sendBackgroundMessage } from './chromeBridge';
 import { BomTab } from './components/BomTab';
 import { BridgeTab } from './components/BridgeTab';
@@ -26,12 +28,12 @@ import { useWorkspaceStore } from './store';
 
 type NavTab = 'bom' | 'capture' | 'cart' | 'bridge' | 'settings';
 
-const NAV_TABS: Array<{ id: NavTab; label: string; icon: typeof ListChecks }> = [
-  { id: 'bom', label: 'BOM', icon: ListChecks },
-  { id: 'capture', label: 'Yakala', icon: ScanSearch },
-  { id: 'cart', label: 'Sepet', icon: ShoppingCart },
-  { id: 'bridge', label: 'Köprü', icon: ArrowLeftRight },
-  { id: 'settings', label: 'Ayar', icon: Settings },
+const NAV_TABS: Array<{ id: NavTab; labelKey: I18nKey; icon: typeof ListChecks }> = [
+  { id: 'bom', labelKey: 'tabBom', icon: ListChecks },
+  { id: 'capture', labelKey: 'tabCapture', icon: ScanSearch },
+  { id: 'cart', labelKey: 'tabCart', icon: ShoppingCart },
+  { id: 'bridge', labelKey: 'tabBridge', icon: ArrowLeftRight },
+  { id: 'settings', labelKey: 'tabSettings', icon: Settings },
 ];
 
 export function App() {
@@ -63,7 +65,8 @@ export function App() {
 
   useEffect(() => {
     document.documentElement.dataset.theme = settings.theme;
-  }, [settings.theme]);
+    document.documentElement.lang = settings.locale;
+  }, [settings.theme, settings.locale]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -135,16 +138,29 @@ export function App() {
             )}
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
+            <select
+              aria-label={t(settings.locale, 'languageLabel')}
+              value={settings.locale}
+              onChange={(e) => updateSettings({ locale: e.target.value as Locale })}
+              className="wb-input font-mono-tech h-7 px-1.5 text-[10px] font-medium"
+            >
+              {SUPPORTED_LOCALES.map((loc) => (
+                <option key={loc} value={loc}>
+                  {LOCALE_LABELS[loc]}
+                </option>
+              ))}
+            </select>
+
             <button
               type="button"
               onClick={() => setTab('settings')}
               title={
                 apiHealth?.online
-                  ? `robo-api çevrimiçi (${settings.apiBaseUrl})`
-                  : 'robo-api çevrimdışı: ayarları aç'
+                  ? `${t(settings.locale, 'apiActive')} (${settings.apiBaseUrl})`
+                  : t(settings.locale, 'offline')
               }
-              className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border px-2 py-1 text-[11px] font-medium whitespace-nowrap transition-colors"
+              className="inline-flex items-center gap-1 rounded-[var(--radius-sm)] border px-2 py-1 text-[11px] font-medium whitespace-nowrap transition-colors"
               style={
                 apiHealth?.online
                   ? {
@@ -164,16 +180,22 @@ export function App() {
               ) : (
                 <WifiOff className="h-3 w-3" aria-hidden="true" />
               )}
-              {apiHealth?.online ? 'API Aktif' : 'Offline'}
+              {apiHealth?.online ? t(settings.locale, 'apiActive') : t(settings.locale, 'offline')}
             </button>
 
             <button
               type="button"
               onClick={toggleTheme}
               aria-label={
-                settings.theme === 'dark' ? 'Açık temaya geç' : 'Koyu temaya geç'
+                settings.theme === 'dark'
+                  ? t(settings.locale, 'switchToLight')
+                  : t(settings.locale, 'switchToDark')
               }
-              title={settings.theme === 'dark' ? 'Açık tema' : 'Koyu tema'}
+              title={
+                settings.theme === 'dark'
+                  ? t(settings.locale, 'themeLight')
+                  : t(settings.locale, 'themeDark')
+              }
               className="wb-btn-ghost inline-flex h-7 w-7 items-center justify-center"
             >
               {settings.theme === 'dark' ? (
@@ -296,8 +318,9 @@ export function App() {
           aria-label="Çalışma alanı sekmeleri"
           className="grid grid-cols-5 border-t border-[var(--border-subtle)] bg-[var(--bg-canvas)]"
         >
-          {NAV_TABS.map(({ id, label, icon: Icon }) => {
+          {NAV_TABS.map(({ id, labelKey, icon: Icon }) => {
             const active = tab === id;
+            const label = t(settings.locale, labelKey);
             return (
               <button
                 key={id}
@@ -368,7 +391,7 @@ export function App() {
       >
         {!hydrated ? (
           <div className="wb-card p-4 text-xs text-[var(--text-muted)]">
-            Çalışma alanı yükleniyor...
+            {t(settings.locale, 'loadingWorkspace')}
           </div>
         ) : (
           <>

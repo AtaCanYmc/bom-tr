@@ -1,5 +1,7 @@
 import { Activity, ExternalLink, Moon, Sun, Wifi, WifiOff } from 'lucide-react';
 import { useState } from 'react';
+import { SUPPORTED_LOCALES, type Locale } from '../../shared/bom';
+import { LOCALE_LABELS, t } from '../../shared/i18n';
 import { STORE_LIST, buildFallbackSearchUrls } from '../../shared/stores';
 import { ensureOriginPermission, sendBackgroundMessage } from '../chromeBridge';
 import { useWorkspaceStore } from '../store';
@@ -10,16 +12,18 @@ export function SettingsTab() {
   const [checking, setChecking] = useState(false);
   const [offlineQuery, setOfflineQuery] = useState('');
 
+  const loc = settings.locale;
+
   const handleSaveAndCheck = async () => {
     const clean = urlInput.trim().replace(/\/+$/, '');
     try {
       const granted = await ensureOriginPermission(clean);
       if (!granted) {
-        setNotice('Özel API adresi için alan adı izni verilmedi.');
+        setNotice('Origin permission denied.');
         return;
       }
     } catch {
-      setNotice('Geçersiz API adresi. Örn: http://127.0.0.1:8000');
+      setNotice('Invalid API URL. Example: http://127.0.0.1:8000');
       return;
     }
 
@@ -32,8 +36,8 @@ export function SettingsTab() {
       setApiHealth(res.health);
       setNotice(
         res.health.online
-          ? `robo-api çevrimiçi${res.health.version ? ` (v${res.health.version})` : ''}.`
-          : `robo-api çevrimdışı: ${res.health.error ?? 'yanıt yok'}`,
+          ? `robo-api ${t(loc, 'online')}${res.health.version ? ` (v${res.health.version})` : ''}.`
+          : `robo-api ${t(loc, 'offline')}: ${res.health.error ?? 'no response'}`,
       );
     } else if (!res.ok) {
       setApiHealth({
@@ -54,7 +58,7 @@ export function SettingsTab() {
       delayMs: settings.batchTabDelayMs,
     });
     if (res.ok && 'openedCount' in res) {
-      setNotice(`6 mağazada "${offlineQuery}" araması açıldı.`);
+      setNotice(`${res.openedCount} tabs opened for "${offlineQuery}".`);
     }
   };
 
@@ -63,7 +67,7 @@ export function SettingsTab() {
       <section className="wb-card space-y-3 p-3">
         <div className="flex items-center justify-between gap-2">
           <h2 className="m-0 text-[13px] font-semibold text-[var(--text-primary)]">
-            robo-api Bağlantısı
+            {t(loc, 'apiSectionTitle')}
           </h2>
           {apiHealth ? (
             <span
@@ -87,17 +91,14 @@ export function SettingsTab() {
               ) : (
                 <WifiOff className="h-3 w-3" aria-hidden="true" />
               )}
-              {apiHealth.online ? 'Çevrimiçi' : 'Offline Fallback'}
+              {apiHealth.online ? t(loc, 'online') : t(loc, 'offlineFallback')}
             </span>
           ) : null}
         </div>
 
         <div>
-          <label
-            htmlFor="api-base-url"
-            className="mb-1 block text-[11px] text-[var(--text-muted)]"
-          >
-            API Adresi (varsayılan localhost veya Tailscale/LAN)
+          <label htmlFor="api-base-url" className="mb-1 block text-[11px] text-[var(--text-muted)]">
+            {t(loc, 'apiUrlLabel')}
           </label>
           <div className="flex gap-1.5">
             <input
@@ -115,7 +116,7 @@ export function SettingsTab() {
               className="wb-btn-primary inline-flex items-center gap-1 px-3 py-1.5 text-xs"
             >
               <Activity className="h-3.5 w-3.5" aria-hidden="true" />
-              {checking ? 'Test...' : 'Kaydet & Test'}
+              {checking ? t(loc, 'testing') : t(loc, 'saveAndTest')}
             </button>
           </div>
           {apiHealth && !apiHealth.online && (
@@ -127,16 +128,16 @@ export function SettingsTab() {
                 color: 'var(--status-warn)',
               }}
             >
-              API erişilemiyor. Yerel BOM düzenleme, JSON içe/dışa aktarım ve 6 mağaza{' '}
-              <code className="font-mono-tech">?q=...</code> arama sekmeleri offline çalışmaya devam
-              eder.
+              {t(loc, 'apiOfflineHint')}
             </div>
           )}
         </div>
 
         <div className="grid grid-cols-3 gap-2 pt-0.5">
           <label className="space-y-1">
-            <span className="block text-[10px] text-[var(--text-muted)]">Teslimat</span>
+            <span className="block text-[10px] text-[var(--text-muted)]">
+              {t(loc, 'deliveryLabel')}
+            </span>
             <input
               type="text"
               value={settings.deliveryDestination}
@@ -145,16 +146,20 @@ export function SettingsTab() {
             />
           </label>
           <label className="space-y-1">
-            <span className="block text-[10px] text-[var(--text-muted)]">Para Birimi</span>
+            <span className="block text-[10px] text-[var(--text-muted)]">
+              {t(loc, 'currencyLabel')}
+            </span>
             <input
               type="text"
               value={settings.currency}
-              onChange={(e) => updateSettings({ currency: e.target.value })}
+              onChange={(e) => updateSettings({ currency: e.target.value.toUpperCase() })}
               className="wb-input font-mono-tech w-full px-2 py-1.5 text-xs"
             />
           </label>
           <label className="space-y-1">
-            <span className="block text-[10px] text-[var(--text-muted)]">Gecikme (ms)</span>
+            <span className="block text-[10px] text-[var(--text-muted)]">
+              {t(loc, 'delayLabel')}
+            </span>
             <input
               type="number"
               min={150}
@@ -171,58 +176,86 @@ export function SettingsTab() {
           </label>
         </div>
 
-        <div className="flex items-center justify-between border-t border-[var(--border-subtle)] pt-2.5">
-          <div>
-            <div className="text-[11px] font-medium text-[var(--text-primary)]">Görünüm Teması</div>
-            <div className="text-[10px] text-[var(--text-muted)]">
-              Kısayol: <code className="font-mono-tech">Ctrl+Shift+B</code> /{' '}
-              <code className="font-mono-tech">Cmd+Shift+B</code>
+        <div className="space-y-2.5 border-t border-[var(--border-subtle)] pt-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <div className="text-[11px] font-medium text-[var(--text-primary)]">
+                {t(loc, 'appearanceTitle')}
+              </div>
+              <div className="text-[10px] text-[var(--text-muted)]">
+                {t(loc, 'shortcutHint')}: <code className="font-mono-tech">Ctrl+Shift+B</code> /{' '}
+                <code className="font-mono-tech">Cmd+Shift+B</code>
+              </div>
+            </div>
+            <div className="inline-flex rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-input)] p-0.5">
+              <button
+                type="button"
+                onClick={() => updateSettings({ theme: 'dark' })}
+                aria-pressed={settings.theme === 'dark'}
+                className="inline-flex items-center gap-1 rounded-[var(--radius-sm)] px-2 py-1 text-[11px] font-medium whitespace-nowrap"
+                style={
+                  settings.theme === 'dark'
+                    ? { backgroundColor: 'var(--bg-subtle)', color: 'var(--text-primary)' }
+                    : { color: 'var(--text-muted)' }
+                }
+              >
+                <Moon className="h-3 w-3" aria-hidden="true" />
+                {t(loc, 'dark')}
+              </button>
+              <button
+                type="button"
+                onClick={() => updateSettings({ theme: 'light' })}
+                aria-pressed={settings.theme === 'light'}
+                className="inline-flex items-center gap-1 rounded-[var(--radius-sm)] px-2 py-1 text-[11px] font-medium whitespace-nowrap"
+                style={
+                  settings.theme === 'light'
+                    ? { backgroundColor: 'var(--bg-subtle)', color: 'var(--text-primary)' }
+                    : { color: 'var(--text-muted)' }
+                }
+              >
+                <Sun className="h-3 w-3" aria-hidden="true" />
+                {t(loc, 'light')}
+              </button>
             </div>
           </div>
-          <div className="inline-flex rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-input)] p-0.5">
-            <button
-              type="button"
-              onClick={() => updateSettings({ theme: 'dark' })}
-              aria-pressed={settings.theme === 'dark'}
-              className="inline-flex items-center gap-1 rounded-[var(--radius-sm)] px-2 py-1 text-[11px] font-medium whitespace-nowrap"
-              style={
-                settings.theme === 'dark'
-                  ? { backgroundColor: 'var(--bg-subtle)', color: 'var(--text-primary)' }
-                  : { color: 'var(--text-muted)' }
-              }
-            >
-              <Moon className="h-3 w-3" aria-hidden="true" />
-              Koyu
-            </button>
-            <button
-              type="button"
-              onClick={() => updateSettings({ theme: 'light' })}
-              aria-pressed={settings.theme === 'light'}
-              className="inline-flex items-center gap-1 rounded-[var(--radius-sm)] px-2 py-1 text-[11px] font-medium whitespace-nowrap"
-              style={
-                settings.theme === 'light'
-                  ? { backgroundColor: 'var(--bg-subtle)', color: 'var(--text-primary)' }
-                  : { color: 'var(--text-muted)' }
-              }
-            >
-              <Sun className="h-3 w-3" aria-hidden="true" />
-              Açık
-            </button>
+
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] text-[var(--text-secondary)]">
+              {t(loc, 'languageLabel')}
+            </span>
+            <div className="inline-flex rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-input)] p-0.5">
+              {SUPPORTED_LOCALES.map((code: Locale) => (
+                <button
+                  key={code}
+                  type="button"
+                  onClick={() => updateSettings({ locale: code })}
+                  aria-pressed={settings.locale === code}
+                  className="font-mono-tech rounded-[var(--radius-sm)] px-2 py-1 text-[10px] font-semibold"
+                  style={
+                    settings.locale === code
+                      ? { backgroundColor: 'var(--accent)', color: 'var(--accent-fg)' }
+                      : { color: 'var(--text-muted)' }
+                  }
+                >
+                  {LOCALE_LABELS[code]}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       <section className="wb-card space-y-2.5 p-3">
         <h2 className="m-0 text-[13px] font-semibold text-[var(--text-primary)]">
-          Offline 6 Mağaza Arama (?q=...)
+          {t(loc, 'offlineSearchTitle')}
         </h2>
         <form onSubmit={handleOfflineSearch} className="flex gap-1.5">
           <input
             type="text"
             value={offlineQuery}
             onChange={(e) => setOfflineQuery(e.target.value)}
-            aria-label="Offline mağaza arama terimi"
-            placeholder="Örn: ESP32-WROOM-32"
+            aria-label={t(loc, 'offlineSearchTitle')}
+            placeholder="ESP32-WROOM-32"
             className="wb-input flex-1 px-2.5 py-1.5 text-xs"
           />
           <button
@@ -230,7 +263,8 @@ export function SettingsTab() {
             disabled={!offlineQuery.trim()}
             className="wb-btn-secondary inline-flex items-center gap-1 px-2.5 py-1.5 text-xs"
           >
-            <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />6 Sekme Aç
+            <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+            {t(loc, 'openSixTabs')}
           </button>
         </form>
         <div className="flex flex-wrap gap-1">
@@ -246,8 +280,7 @@ export function SettingsTab() {
       </section>
 
       <div className="wb-inset p-2.5 text-[11px] leading-relaxed text-[var(--text-muted)]">
-        Gizlilik sınırı: Yalnızca parça arama terimleri ve BOM adetleri API&apos;ye gönderilir.
-        Proje dosyaları, kimlik bilgileri veya ilgisiz sayfa içerikleri gönderilmez.
+        {t(loc, 'privacyNote')}
       </div>
     </div>
   );

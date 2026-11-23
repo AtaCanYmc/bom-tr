@@ -66,51 +66,59 @@ export function CartTab() {
   };
 
   const renderScenario = (scenario: CartScenario) => (
-    <div key={scenario.kind} className="rounded-lg border border-slate-800 bg-slate-900/70 p-3">
+    <article key={scenario.kind} className="wb-card p-3">
       <div className="flex items-center justify-between gap-2">
-        <div className="font-medium text-slate-100">{scenario.label}</div>
-        <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-300">
+        <h3 className="m-0 text-[13px] font-semibold text-[var(--text-primary)]">
+          {scenario.label}
+        </h3>
+        <span className="font-mono-tech tabular-nums rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-1.5 py-0.5 text-[10px] text-[var(--text-secondary)]">
           Kapsama: {scenario.coverageCount}/{scenario.requestedCount}
         </span>
       </div>
 
-      <div className="mt-2 grid grid-cols-3 gap-1.5 rounded bg-slate-950/80 p-2 text-center text-[11px]">
+      <div className="wb-inset mt-2.5 grid grid-cols-3 gap-2 p-2.5 text-center text-[11px]">
         <div>
-          <div className="text-[10px] text-slate-400">Ara Toplam</div>
-          <div className="font-medium text-slate-200">
+          <div className="text-[10px] text-[var(--text-muted)]">Ara Toplam</div>
+          <div className="font-mono-tech tabular-nums font-medium text-[var(--text-primary)]">
             {scenario.itemsSubtotal.toFixed(2)} {scenario.currency}
           </div>
         </div>
         <div>
-          <div className="text-[10px] text-slate-400">Kargo</div>
-          <div className="font-medium text-slate-200">
+          <div className="text-[10px] text-[var(--text-muted)]">Kargo</div>
+          <div className="font-mono-tech tabular-nums font-medium text-[var(--text-primary)]">
             {scenario.shippingTotal.toFixed(2)} {scenario.currency}
           </div>
         </div>
         <div>
-          <div className="text-[10px] text-slate-400">Genel Toplam</div>
-          <div className="font-semibold text-emerald-300">
+          <div className="text-[10px] text-[var(--text-muted)]">Genel Toplam</div>
+          <div
+            className="font-mono-tech tabular-nums font-semibold"
+            style={{ color: 'var(--status-ok)' }}
+          >
             {scenario.grandTotal.toFixed(2)} {scenario.currency}
           </div>
         </div>
       </div>
 
-      <div className="mt-2 space-y-1.5">
+      <div className="mt-2.5 space-y-1.5">
         {scenario.stores.map((st) => (
-          <div key={st.store} className="rounded border border-slate-800/80 bg-slate-950/50 p-2">
-            <div className="flex items-center justify-between text-[11px] font-medium text-slate-200">
-              <span>{st.store}</span>
-              <span>
+          <div key={st.store} className="wb-inset p-2">
+            <div className="flex items-center justify-between gap-2 text-[11px] font-medium text-[var(--text-primary)]">
+              <span className="font-mono-tech">{st.store}</span>
+              <span className="font-mono-tech tabular-nums text-[var(--text-secondary)]">
                 {st.subtotal.toFixed(2)} + {st.shippingFee.toFixed(2)} kargo
               </span>
             </div>
-            <div className="mt-1 space-y-0.5 text-[10px] text-slate-400">
+            <div className="mt-1 space-y-0.5 text-[10px] text-[var(--text-muted)]">
               {st.items.map((line) => (
                 <div key={`${st.store}:${line.url}`} className="flex justify-between gap-2">
                   <span className="truncate">
-                    {line.quantity}× {line.title}
+                    <span className="font-mono-tech tabular-nums">{line.quantity}x</span>{' '}
+                    {line.title}
                   </span>
-                  <span className="shrink-0 text-slate-300">{line.lineTotal.toFixed(2)}</span>
+                  <span className="font-mono-tech tabular-nums shrink-0 text-[var(--text-secondary)]">
+                    {line.lineTotal.toFixed(2)}
+                  </span>
                 </div>
               ))}
             </div>
@@ -119,7 +127,14 @@ export function CartTab() {
       </div>
 
       {scenario.missingItems.length > 0 && (
-        <div className="mt-2 text-[10px] text-amber-300">
+        <div
+          className="mt-2 rounded-[var(--radius-sm)] border px-2 py-1.5 text-[10px]"
+          style={{
+            borderColor: 'var(--status-warn-border)',
+            backgroundColor: 'var(--status-warn-bg)',
+            color: 'var(--status-warn)',
+          }}
+        >
           Eksik kalemler: {scenario.missingItems.join(', ')}
         </div>
       )}
@@ -127,50 +142,71 @@ export function CartTab() {
       <button
         type="button"
         onClick={() => void handleOpenScenarioTabs(scenario)}
-        className="mt-2.5 inline-flex w-full items-center justify-center gap-1.5 rounded bg-sky-700/90 px-2.5 py-1.5 text-[11px] font-medium text-white hover:bg-sky-600"
+        className="wb-btn-secondary mt-2.5 inline-flex w-full items-center justify-center gap-1.5 px-2.5 py-2 text-[11px]"
       >
-        <ExternalLink className="h-3.5 w-3.5" />
+        <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
         Ürün Sekmelerini Aç ({scenario.stores.reduce((n, s) => n + s.items.length, 0)})
       </button>
-    </div>
+    </article>
   );
 
   return (
     <div className="space-y-3 text-xs">
-      <div className="rounded-lg border border-slate-800 bg-slate-900/70 p-3">
+      <section className="wb-card p-3">
         <div className="flex items-center justify-between gap-2">
-          <div>
-            <div className="font-medium text-slate-100">Sepet Kıyaslama</div>
-            <div className="text-[11px] text-slate-400">
-              {eligibleItems.length} kalem · Hedef: {settings.deliveryDestination} ({settings.currency})
-            </div>
+          <div className="min-w-0">
+            <h2 className="m-0 text-[13px] font-semibold text-[var(--text-primary)]">
+              Sepet Kıyaslama
+            </h2>
+            <p className="mt-0.5 font-mono-tech tabular-nums text-[11px] text-[var(--text-muted)]">
+              {eligibleItems.length} kalem / {settings.deliveryDestination} ({settings.currency})
+            </p>
           </div>
           <button
             type="button"
-            disabled={running}
+            disabled={running || eligibleItems.length === 0}
             onClick={() => void handleOptimize()}
-            className="inline-flex items-center gap-1 rounded-md bg-sky-600 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-sky-500 disabled:opacity-50"
+            className="wb-btn-primary inline-flex shrink-0 items-center gap-1.5 px-3 py-1.5 text-xs"
           >
-            <Calculator className="h-3.5 w-3.5" />
+            <Calculator className="h-3.5 w-3.5" aria-hidden="true" />
             {running ? 'Hesaplanıyor...' : 'Sepeti Optimize Et'}
           </button>
         </div>
 
-        <label className="mt-2 flex items-center gap-1.5 text-[11px] text-slate-300">
+        <label className="mt-2.5 flex items-center gap-2 text-[11px] text-[var(--text-secondary)]">
           <input
             type="checkbox"
             checked={includeOptional}
             onChange={(e) => setIncludeOptional(e.target.checked)}
-            className="rounded border-slate-700 bg-slate-950"
+            className="h-3.5 w-3.5 accent-[var(--accent)]"
           />
-          <code>optional_or_assumed</code> kalemleri ayrı senaryoya dahil et
+          <span>
+            <code className="font-mono-tech">optional_or_assumed</code> kalemleri senaryoya dahil et
+          </span>
         </label>
-      </div>
+      </section>
 
-      {lastOptimization && (
+      {!lastOptimization ? (
+        <div className="wb-card border-dashed p-5 text-center">
+          <p className="text-xs font-medium text-[var(--text-primary)]">
+            Henüz sepet senaryosu hesaplanmadı.
+          </p>
+          <p className="mt-1 text-[11px] text-[var(--text-muted)]">
+            Tek mağaza ve bölünmüş mağaza toplamlarını kargo eşikleriyle kıyaslamak için{' '}
+            <strong>Sepeti Optimize Et</strong> düğmesine basın.
+          </p>
+        </div>
+      ) : (
         <div className="space-y-2.5">
           {lastOptimization.winningLabel && (
-            <div className="rounded border border-emerald-500/40 bg-emerald-950/25 px-2.5 py-2 text-[11px] text-emerald-200">
+            <div
+              className="rounded-[var(--radius-md)] border px-3 py-2 text-[11px]"
+              style={{
+                borderColor: 'var(--status-ok-border)',
+                backgroundColor: 'var(--status-ok-bg)',
+                color: 'var(--status-ok)',
+              }}
+            >
               Öneri: <strong>{lastOptimization.winningLabel}</strong>
             </div>
           )}
@@ -178,9 +214,14 @@ export function CartTab() {
           {lastOptimization.warnings.map((w, idx) => (
             <div
               key={idx}
-              className="flex items-start gap-1.5 rounded border border-amber-500/40 bg-amber-950/25 p-2 text-[11px] text-amber-200"
+              className="flex items-start gap-2 rounded-[var(--radius-md)] border p-2.5 text-[11px]"
+              style={{
+                borderColor: 'var(--status-warn-border)',
+                backgroundColor: 'var(--status-warn-bg)',
+                color: 'var(--status-warn)',
+              }}
             >
-              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               <span>{w}</span>
             </div>
           ))}
@@ -188,10 +229,12 @@ export function CartTab() {
           {lastOptimization.singleStore && renderScenario(lastOptimization.singleStore)}
           {lastOptimization.splitStore && renderScenario(lastOptimization.splitStore)}
 
-          <div className="rounded border border-slate-800 bg-slate-950/60 p-2 text-[10px] text-slate-400">
-            Kaynak: <code>{lastOptimization.source}</code> · Sorgu:{' '}
-            {new Date(lastOptimization.observedAt).toLocaleString('tr-TR')}. Fiyat ve stoklar
-            yalnızca sorgu anına ait kanıttır; satın alma/sipariş işlemi yapılmaz.
+          <div className="wb-inset p-2.5 text-[10px] leading-relaxed text-[var(--text-muted)]">
+            Kaynak: <code className="font-mono-tech">{lastOptimization.source}</code> / Sorgu:{' '}
+            <span className="font-mono-tech tabular-nums">
+              {new Date(lastOptimization.observedAt).toLocaleString('tr-TR')}
+            </span>
+            . Fiyat ve stoklar yalnızca sorgu anına ait kanıttır; otomatik sipariş verilmez.
           </div>
         </div>
       )}

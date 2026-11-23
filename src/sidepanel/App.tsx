@@ -1,11 +1,15 @@
 import {
   ArrowLeftRight,
+  Check,
   Cpu,
   ListChecks,
+  Moon,
+  Pencil,
   Plus,
   ScanSearch,
   Settings,
   ShoppingCart,
+  Sun,
   Wifi,
   WifiOff,
   X,
@@ -22,6 +26,14 @@ import { useWorkspaceStore } from './store';
 
 type NavTab = 'bom' | 'capture' | 'cart' | 'bridge' | 'settings';
 
+const NAV_TABS: Array<{ id: NavTab; label: string; icon: typeof ListChecks }> = [
+  { id: 'bom', label: 'BOM', icon: ListChecks },
+  { id: 'capture', label: 'Yakala', icon: ScanSearch },
+  { id: 'cart', label: 'Sepet', icon: ShoppingCart },
+  { id: 'bridge', label: 'Köprü', icon: ArrowLeftRight },
+  { id: 'settings', label: 'Ayar', icon: Settings },
+];
+
 export function App() {
   const {
     hydrated,
@@ -34,16 +46,24 @@ export function App() {
     consumePendingContextItem,
     selectProject,
     createProject,
+    renameProject,
     deleteProject,
+    updateSettings,
     setApiHealth,
     setNotice,
   } = useWorkspaceStore();
 
   const [tab, setTab] = useState<NavTab>('bom');
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameDraft, setRenameDraft] = useState('');
 
   useEffect(() => {
     void hydrate();
   }, [hydrate]);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = settings.theme;
+  }, [settings.theme]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -72,55 +92,189 @@ export function App() {
     return () => chrome.storage.onChanged.removeListener(listener);
   }, [consumePendingContextItem]);
 
+  const startRename = (projectId: string, currentName: string) => {
+    setRenamingId(projectId);
+    setRenameDraft(currentName);
+  };
+
+  const commitRename = () => {
+    if (renamingId && renameDraft.trim()) {
+      renameProject(renamingId, renameDraft.trim());
+    }
+    setRenamingId(null);
+  };
+
+  const toggleTheme = () => {
+    updateSettings({ theme: settings.theme === 'dark' ? 'light' : 'dark' });
+  };
+
+  const activeProject = projects.find((p) => p.id === activeProjectId);
+  const attentionCount =
+    activeProject?.items.filter(
+      (i) => i.bom.status === 'inferred_required' || i.bom.match_confidence === 'ambiguous',
+    ).length ?? 0;
+
   return (
-    <div className="flex min-h-screen flex-col bg-slate-950 text-slate-100">
-      <header className="sticky top-0 z-10 border-b border-slate-800 bg-slate-950/95 px-3 py-2 backdrop-blur">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5">
-            <Cpu className="h-4 w-4 text-amber-400" />
-            <span className="text-sm font-semibold tracking-tight">bomTR</span>
+    <div className="flex min-h-screen flex-col bg-[var(--bg-canvas)] text-[var(--text-primary)]">
+      <header className="sticky top-0 z-10 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]">
+        <div className="flex items-center justify-between gap-2 px-3 pt-2.5 pb-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <span
+              className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-[var(--radius-sm)] border border-[var(--accent-border)] bg-[var(--accent-soft)] text-[var(--accent)]"
+              aria-hidden="true"
+            >
+              <Cpu className="h-3.5 w-3.5" />
+            </span>
+            <h1 className="m-0 text-sm font-semibold tracking-tight text-[var(--text-primary)]">
+              bomTR
+            </h1>
+            {isExtensionRuntime() && (
+              <span className="font-mono-tech text-[10px] text-[var(--text-muted)]">
+                v{chrome.runtime.getManifest().version}
+              </span>
+            )}
           </div>
-          <button
-            type="button"
-            onClick={() => setTab('settings')}
-            className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] ${
-              apiHealth?.online
-                ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
-                : 'border-amber-500/40 bg-amber-500/10 text-amber-300'
-            }`}
-          >
-            {apiHealth?.online ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
-            {apiHealth?.online ? 'robo-api' : 'Offline'}
-          </button>
+
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setTab('settings')}
+              title={
+                apiHealth?.online
+                  ? `robo-api çevrimiçi (${settings.apiBaseUrl})`
+                  : 'robo-api çevrimdışı: ayarları aç'
+              }
+              className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border px-2 py-1 text-[11px] font-medium whitespace-nowrap transition-colors"
+              style={
+                apiHealth?.online
+                  ? {
+                      borderColor: 'var(--status-ok-border)',
+                      backgroundColor: 'var(--status-ok-bg)',
+                      color: 'var(--status-ok)',
+                    }
+                  : {
+                      borderColor: 'var(--status-warn-border)',
+                      backgroundColor: 'var(--status-warn-bg)',
+                      color: 'var(--status-warn)',
+                    }
+              }
+            >
+              {apiHealth?.online ? (
+                <Wifi className="h-3 w-3" aria-hidden="true" />
+              ) : (
+                <WifiOff className="h-3 w-3" aria-hidden="true" />
+              )}
+              {apiHealth?.online ? 'API Aktif' : 'Offline'}
+            </button>
+
+            <button
+              type="button"
+              onClick={toggleTheme}
+              aria-label={
+                settings.theme === 'dark' ? 'Açık temaya geç' : 'Koyu temaya geç'
+              }
+              title={settings.theme === 'dark' ? 'Açık tema' : 'Koyu tema'}
+              className="wb-btn-ghost inline-flex h-7 w-7 items-center justify-center"
+            >
+              {settings.theme === 'dark' ? (
+                <Sun className="h-3.5 w-3.5" aria-hidden="true" />
+              ) : (
+                <Moon className="h-3.5 w-3.5" aria-hidden="true" />
+              )}
+            </button>
+          </div>
         </div>
 
-        <div className="mt-2 flex items-center gap-1 overflow-x-auto pb-0.5">
+        <div
+          className="flex items-center gap-1 overflow-x-auto px-3 pb-2"
+          aria-label="BOM projeleri"
+        >
           {projects.map((p) => {
             const active = p.id === activeProjectId;
+            const isRenaming = renamingId === p.id;
+
+            if (isRenaming) {
+              return (
+                <form
+                  key={p.id}
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    commitRename();
+                  }}
+                  className="inline-flex shrink-0 items-center gap-1 rounded-[var(--radius-sm)] border border-[var(--accent)] bg-[var(--bg-input)] px-1.5 py-0.5"
+                >
+                  <input
+                    type="text"
+                    value={renameDraft}
+                    onChange={(e) => setRenameDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') setRenamingId(null);
+                    }}
+                    onBlur={commitRename}
+                    autoFocus
+                    aria-label="Proje adını düzenle"
+                    className="w-28 bg-transparent text-[11px] text-[var(--text-primary)] outline-none"
+                  />
+                  <button
+                    type="submit"
+                    aria-label="Proje adını kaydet"
+                    className="text-[var(--accent)]"
+                  >
+                    <Check className="h-3 w-3" aria-hidden="true" />
+                  </button>
+                </form>
+              );
+            }
+
             return (
               <div
                 key={p.id}
-                className={`inline-flex shrink-0 items-center rounded border text-[11px] ${
+                className="inline-flex shrink-0 items-center rounded-[var(--radius-sm)] border text-[11px] transition-colors"
+                style={
                   active
-                    ? 'border-sky-500/60 bg-sky-500/15 text-sky-200'
-                    : 'border-slate-800 bg-slate-900 text-slate-400 hover:text-slate-200'
-                }`}
+                    ? {
+                        borderColor: 'var(--accent-border)',
+                        backgroundColor: 'var(--accent-soft)',
+                        color: 'var(--text-primary)',
+                      }
+                    : {
+                        borderColor: 'var(--border-subtle)',
+                        backgroundColor: 'var(--bg-canvas)',
+                        color: 'var(--text-secondary)',
+                      }
+                }
               >
                 <button
                   type="button"
                   onClick={() => selectProject(p.id)}
-                  className="px-2 py-0.5"
+                  onDoubleClick={() => startRename(p.id, p.name)}
+                  className="inline-flex items-center gap-1.5 px-2 py-1 font-medium whitespace-nowrap"
                 >
-                  {p.name} ({p.items.length})
+                  <span className="max-w-[120px] truncate">{p.name}</span>
+                  <span className="font-mono-tech tabular-nums text-[10px] text-[var(--text-muted)]">
+                    {p.items.length}
+                  </span>
                 </button>
+                {active && (
+                  <button
+                    type="button"
+                    onClick={() => startRename(p.id, p.name)}
+                    aria-label={`${p.name} projesini yeniden adlandır`}
+                    title="Yeniden adlandır"
+                    className="px-1 py-1 text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                  >
+                    <Pencil className="h-2.5 w-2.5" aria-hidden="true" />
+                  </button>
+                )}
                 {projects.length > 1 && (
                   <button
                     type="button"
                     onClick={() => deleteProject(p.id)}
+                    aria-label={`${p.name} projesini sil`}
                     title="Projeyi sil"
-                    className="pr-1.5 text-slate-500 hover:text-rose-400"
+                    className="pr-1.5 py-1 text-[var(--text-muted)] hover:text-[var(--status-err)]"
                   >
-                    <X className="h-3 w-3" />
+                    <X className="h-3 w-3" aria-hidden="true" />
                   </button>
                 )}
               </div>
@@ -129,57 +283,102 @@ export function App() {
           <button
             type="button"
             onClick={() => createProject(`BOM #${projects.length + 1}`)}
+            aria-label="Yeni BOM projesi oluştur"
             title="Yeni BOM projesi"
-            className="inline-flex shrink-0 items-center rounded border border-dashed border-slate-700 px-1.5 py-0.5 text-[11px] text-slate-400 hover:border-slate-500 hover:text-slate-200"
+            className="wb-btn-ghost inline-flex h-6 w-6 shrink-0 items-center justify-center border border-dashed border-[var(--border-strong)]"
           >
-            <Plus className="h-3 w-3" />
+            <Plus className="h-3 w-3" aria-hidden="true" />
           </button>
         </div>
 
-        <nav className="mt-2 grid grid-cols-5 gap-1">
-          {[
-            { id: 'bom' as const, label: 'BOM', icon: ListChecks },
-            { id: 'capture' as const, label: 'Yakala', icon: ScanSearch },
-            { id: 'cart' as const, label: 'Sepet', icon: ShoppingCart },
-            { id: 'bridge' as const, label: 'Köprü', icon: ArrowLeftRight },
-            { id: 'settings' as const, label: 'Ayar', icon: Settings },
-          ].map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setTab(id)}
-              className={`flex flex-col items-center gap-0.5 rounded py-1 text-[10px] font-medium transition ${
-                tab === id
-                  ? 'bg-slate-800 text-sky-300'
-                  : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'
-              }`}
-            >
-              <Icon className="h-3.5 w-3.5" />
-              {label}
-            </button>
-          ))}
+        <nav
+          role="tablist"
+          aria-label="Çalışma alanı sekmeleri"
+          className="grid grid-cols-5 border-t border-[var(--border-subtle)] bg-[var(--bg-canvas)]"
+        >
+          {NAV_TABS.map(({ id, label, icon: Icon }) => {
+            const active = tab === id;
+            return (
+              <button
+                key={id}
+                id={`tab-${id}`}
+                role="tab"
+                type="button"
+                aria-selected={active}
+                aria-controls={`panel-${id}`}
+                onClick={() => setTab(id)}
+                className="relative flex flex-col items-center justify-center gap-0.5 py-2 text-[11px] font-medium whitespace-nowrap transition-colors"
+                style={{
+                  color: active ? 'var(--text-primary)' : 'var(--text-muted)',
+                  backgroundColor: active ? 'var(--bg-surface)' : 'transparent',
+                }}
+              >
+                <span className="relative inline-flex items-center">
+                  <Icon
+                    className="h-3.5 w-3.5"
+                    style={{ color: active ? 'var(--accent)' : 'currentColor' }}
+                    aria-hidden="true"
+                  />
+                  {id === 'bom' && attentionCount > 0 && (
+                    <span
+                      className="ml-1 font-mono-tech tabular-nums text-[9px] font-semibold"
+                      style={{ color: 'var(--status-warn)' }}
+                    >
+                      {attentionCount}
+                    </span>
+                  )}
+                </span>
+                <span>{label}</span>
+                {active && (
+                  <span
+                    className="absolute inset-x-2 bottom-0 h-[2px] rounded-full"
+                    style={{ backgroundColor: 'var(--accent)' }}
+                    aria-hidden="true"
+                  />
+                )}
+              </button>
+            );
+          })}
         </nav>
       </header>
 
       {notice && (
-        <div className="mx-3 mt-2 flex items-center justify-between gap-2 rounded border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-[11px] text-slate-200">
-          <span>{notice}</span>
+        <div
+          role="status"
+          aria-live="polite"
+          className="mx-3 mt-2.5 flex items-center justify-between gap-2 rounded-[var(--radius-md)] border border-[var(--border-strong)] bg-[var(--bg-surface)] px-2.5 py-2 text-[11px] text-[var(--text-primary)]"
+        >
+          <span className="min-w-0 leading-snug">{notice}</span>
           <button
             type="button"
             onClick={() => setNotice(null)}
-            className="text-slate-400 hover:text-slate-200"
+            aria-label="Bildirimi kapat"
+            className="wb-btn-ghost shrink-0 p-0.5"
           >
-            <X className="h-3.5 w-3.5" />
+            <X className="h-3.5 w-3.5" aria-hidden="true" />
           </button>
         </div>
       )}
 
-      <main className="flex-1 p-3">
-        {tab === 'bom' && <BomTab />}
-        {tab === 'capture' && <CaptureCompareTab />}
-        {tab === 'cart' && <CartTab />}
-        {tab === 'bridge' && <BridgeTab />}
-        {tab === 'settings' && <SettingsTab />}
+      <main
+        id={`panel-${tab}`}
+        role="tabpanel"
+        aria-labelledby={`tab-${tab}`}
+        className="flex-1 p-3"
+      >
+        {!hydrated ? (
+          <div className="wb-card p-4 text-xs text-[var(--text-muted)]">
+            Çalışma alanı yükleniyor...
+          </div>
+        ) : (
+          <>
+            {tab === 'bom' && <BomTab />}
+            {tab === 'capture' && <CaptureCompareTab />}
+            {tab === 'cart' && <CartTab />}
+            {tab === 'bridge' && <BridgeTab />}
+            {tab === 'settings' && <SettingsTab />}
+          </>
+        )}
       </main>
     </div>
   );

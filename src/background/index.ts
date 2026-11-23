@@ -9,12 +9,11 @@ const MAX_BATCH_TABS = 12;
 
 async function setupExtension(): Promise<void> {
   await chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
-  chrome.contextMenus.removeAll(() => {
-    chrome.contextMenus.create({
-      id: CONTEXT_MENU_ID,
-      title: "bomTR: BOM'a Ekle",
-      contexts: ['selection', 'page'],
-    });
+  await chrome.contextMenus.removeAll();
+  chrome.contextMenus.create({
+    id: CONTEXT_MENU_ID,
+    title: "bomTR: BOM'a Ekle",
+    contexts: ['selection', 'page'],
   });
 }
 
@@ -202,7 +201,7 @@ async function handleMessage(message: BackgroundRequest): Promise<BackgroundResp
     }
     case 'UPDATE_BADGE': {
       const text = message.count > 0 ? String(Math.min(99, message.count)) : '';
-      const color = message.attentionCount > 0 ? '#f59e0b' : '#0ea5e9';
+      const color = message.attentionCount > 0 ? '#d97706' : '#0f766e';
       await chrome.action.setBadgeBackgroundColor({ color });
       await chrome.action.setBadgeText({ text });
       return { ok: true };

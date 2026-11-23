@@ -83,11 +83,14 @@ export interface BomProject {
   items: WorkspaceBomItem[];
 }
 
+export type ThemeMode = 'dark' | 'light';
+
 export interface ExtensionSettings {
   apiBaseUrl: string;
   deliveryDestination: string;
   currency: string;
   batchTabDelayMs: number;
+  theme: ThemeMode;
 }
 
 export interface ApiHealthStatus {
@@ -160,6 +163,7 @@ export const DEFAULT_SETTINGS: ExtensionSettings = {
   deliveryDestination: 'TR',
   currency: 'TRY',
   batchTabDelayMs: 350,
+  theme: 'dark',
 };
 
 export function createEmptyBomItem(name = 'Yeni Bileşen'): BomItem {

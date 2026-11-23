@@ -46,15 +46,26 @@ export function BridgeTab() {
   };
 
   const handleCopy = async (label: string, content: string) => {
-    await navigator.clipboard.writeText(content);
-    setCopiedFormat(label);
-    setTimeout(() => setCopiedFormat(null), 1500);
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopiedFormat(label);
+      setTimeout(() => setCopiedFormat(null), 1500);
+    } catch {
+      setNotice('Panoya kopyalama başarısız. İndir düğmesini kullanabilirsiniz.');
+    }
   };
 
   return (
     <div className="space-y-3 text-xs">
-      <div className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 space-y-2">
-        <div className="font-medium text-slate-100">bom-sourcing JSON İçe Aktar</div>
+      <section className="wb-card space-y-2.5 p-3">
+        <div>
+          <h2 className="m-0 text-[13px] font-semibold text-[var(--text-primary)]">
+            bom-sourcing JSON İçe Aktar
+          </h2>
+          <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
+            10 alanlı şema doğrulanır; bilinmeyen alan içeren kayıtlar reddedilir.
+          </p>
+        </div>
 
         <div
           onDragOver={(e) => {
@@ -68,20 +79,29 @@ export function BridgeTab() {
             const file = e.dataTransfer.files[0];
             if (file) void handleFile(file);
           }}
-          className={`flex flex-col items-center justify-center rounded-md border border-dashed p-3 text-center transition ${
+          className="flex flex-col items-center justify-center rounded-[var(--radius-md)] border border-dashed p-3.5 text-center transition-colors"
+          style={
             dragging
-              ? 'border-sky-400 bg-sky-950/30 text-sky-200'
-              : 'border-slate-700 bg-slate-950/60 text-slate-400'
-          }`}
+              ? {
+                  borderColor: 'var(--accent)',
+                  backgroundColor: 'var(--accent-soft)',
+                  color: 'var(--text-primary)',
+                }
+              : {
+                  borderColor: 'var(--border-strong)',
+                  backgroundColor: 'var(--bg-input)',
+                  color: 'var(--text-muted)',
+                }
+          }
         >
-          <FileUp className="mb-1 h-4 w-4" />
+          <FileUp className="mb-1.5 h-4 w-4" aria-hidden="true" />
           <span className="text-[11px]">.json dosyasını sürükleyip bırakın veya seçin</span>
-          <label className="mt-1.5 cursor-pointer rounded bg-slate-800 px-2 py-0.5 text-[11px] text-slate-200 hover:bg-slate-700">
+          <label className="wb-btn-secondary mt-2 inline-block px-2.5 py-1 text-[11px]">
             Dosya Seç
             <input
               type="file"
               accept=".json,application/json"
-              className="hidden"
+              className="sr-only"
               onChange={(e) => {
                 const f = e.target.files?.[0];
                 if (f) void handleFile(f);
@@ -90,21 +110,25 @@ export function BridgeTab() {
           </label>
         </div>
 
-        <textarea
-          rows={6}
-          value={rawJson}
-          onChange={(e) => setRawJson(e.target.value)}
-          placeholder='[{"raw_name": "...", "canonical_name": "...", ...}]'
-          className="w-full rounded border border-slate-700 bg-slate-950 p-2 font-mono text-[11px] text-slate-200 placeholder:text-slate-600 focus:border-sky-500 focus:outline-none"
-        />
+        <label className="block space-y-1">
+          <span className="block text-[10px] text-[var(--text-muted)]">JSON İçeriği</span>
+          <textarea
+            rows={5}
+            value={rawJson}
+            onChange={(e) => setRawJson(e.target.value)}
+            placeholder='[{"raw_name": "ESP32", "canonical_name": "ESP32-WROOM-32", ...}]'
+            className="wb-input font-mono-tech w-full p-2 text-[11px]"
+          />
+        </label>
 
         <div className="flex flex-wrap items-center gap-1.5">
           <select
+            aria-label="İçe aktarma modu"
             value={importMode}
             onChange={(e) =>
               setImportMode(e.target.value as 'replace' | 'append' | 'new_project')
             }
-            className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-[11px]"
+            className="wb-input px-2 py-1.5 text-[11px]"
           >
             <option value="replace">Aktif BOM&apos;un üzerine yaz</option>
             <option value="append">Aktif BOM&apos;a ekle</option>
@@ -116,8 +140,9 @@ export function BridgeTab() {
               type="text"
               value={newProjectName}
               onChange={(e) => setNewProjectName(e.target.value)}
+              aria-label="Yeni proje adı"
               placeholder="Proje adı"
-              className="flex-1 rounded border border-slate-700 bg-slate-950 px-2 py-1 text-[11px]"
+              className="wb-input flex-1 px-2 py-1.5 text-[11px]"
             />
           )}
 
@@ -125,37 +150,50 @@ export function BridgeTab() {
             type="button"
             disabled={!rawJson.trim()}
             onClick={() => handleValidateAndImport()}
-            className="ml-auto rounded bg-sky-600 px-2.5 py-1 text-[11px] font-medium text-white hover:bg-sky-500 disabled:opacity-50"
+            className="wb-btn-primary ml-auto px-3 py-1.5 text-[11px]"
           >
-            Doğrula & İçe Aktar
+            Doğrula &amp; İçe Aktar
           </button>
         </div>
 
         {errors.length > 0 && (
-          <div className="space-y-1 rounded border border-rose-500/40 bg-rose-950/30 p-2 text-[11px] text-rose-200">
-            <div className="flex items-center gap-1 font-medium">
-              <AlertCircle className="h-3.5 w-3.5" />
+          <div
+            role="alert"
+            className="space-y-1 rounded-[var(--radius-md)] border p-2.5 text-[11px]"
+            style={{
+              borderColor: 'var(--status-err-border)',
+              backgroundColor: 'var(--status-err-bg)',
+              color: 'var(--status-err)',
+            }}
+          >
+            <div className="flex items-center gap-1.5 font-semibold">
+              <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               Şema Doğrulama Hataları ({errors.length})
             </div>
-            <ul className="max-h-36 space-y-0.5 overflow-y-auto pl-4 list-disc">
+            <ul className="max-h-36 list-disc space-y-0.5 overflow-y-auto pl-4">
               {errors.map((err, idx) => (
                 <li key={idx}>
                   {err.index >= 0 ? `[#${err.index}] ` : ''}
-                  <code>{err.field}</code>: {err.message}
+                  <code className="font-mono-tech">{err.field}</code>: {err.message}
                 </li>
               ))}
             </ul>
           </div>
         )}
-      </div>
+      </section>
 
-      <div className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 space-y-2">
-        <div className="font-medium text-slate-100">Dışa Aktar ({project.items.length} kalem)</div>
-        <div className="text-[11px] text-slate-400">
-          JSON çıktısı yalnızca 10 alanlı <code>bom-sourcing</code> sözleşmesini içerir.
+      <section className="wb-card space-y-2.5 p-3">
+        <div>
+          <h2 className="m-0 text-[13px] font-semibold text-[var(--text-primary)]">
+            Dışa Aktar ({project.items.length} kalem)
+          </h2>
+          <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
+            JSON çıktısı yalnızca saf 10 alanlı <code className="font-mono-tech">bom-sourcing</code>{' '}
+            sözleşmesini üretir.
+          </p>
         </div>
 
-        <div className="grid grid-cols-3 gap-1.5">
+        <div className="grid grid-cols-3 gap-2">
           {[
             {
               key: 'json',
@@ -179,34 +217,40 @@ export function BridgeTab() {
               mime: 'text/csv',
             },
           ].map((fmt) => (
-            <div key={fmt.key} className="space-y-1 rounded border border-slate-800 bg-slate-950/70 p-2">
-              <div className="text-center font-medium text-slate-200">{fmt.label}</div>
-              <div className="flex justify-center gap-1">
+            <div key={fmt.key} className="wb-inset space-y-2 p-2.5 text-center">
+              <div className="font-mono-tech text-[11px] font-semibold text-[var(--text-primary)]">
+                {fmt.label}
+              </div>
+              <div className="flex flex-col gap-1">
                 <button
                   type="button"
                   onClick={() => void handleCopy(fmt.key, fmt.get())}
-                  className="inline-flex items-center gap-0.5 rounded bg-slate-800 px-2 py-1 text-[10px] text-slate-200 hover:bg-slate-700"
+                  className="wb-btn-secondary inline-flex items-center justify-center gap-1 px-2 py-1 text-[10px]"
                 >
                   {copiedFormat === fmt.key ? (
-                    <Check className="h-3 w-3 text-emerald-400" />
+                    <Check
+                      className="h-3 w-3"
+                      style={{ color: 'var(--status-ok)' }}
+                      aria-hidden="true"
+                    />
                   ) : (
-                    <Copy className="h-3 w-3" />
+                    <Copy className="h-3 w-3" aria-hidden="true" />
                   )}
-                  Kopyala
+                  {copiedFormat === fmt.key ? 'Kopyalandı' : 'Kopyala'}
                 </button>
                 <button
                   type="button"
                   onClick={() => downloadTextFile(`${slug}.${fmt.ext}`, fmt.get(), fmt.mime)}
-                  className="inline-flex items-center gap-0.5 rounded bg-slate-800 px-2 py-1 text-[10px] text-slate-200 hover:bg-slate-700"
+                  className="wb-btn-secondary inline-flex items-center justify-center gap-1 px-2 py-1 text-[10px]"
                 >
-                  <Download className="h-3 w-3" />
+                  <Download className="h-3 w-3" aria-hidden="true" />
                   İndir
                 </button>
               </div>
             </div>
           ))}
         </div>
-      </div>
+      </section>
     </div>
   );
 }

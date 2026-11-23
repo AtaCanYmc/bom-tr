@@ -14,7 +14,15 @@ export async function sendBackgroundMessage(
       offline: true,
     };
   }
-  return (await chrome.runtime.sendMessage(request)) as BackgroundResponse;
+  try {
+    return (await chrome.runtime.sendMessage(request)) as BackgroundResponse;
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : 'Arka plan servisi yanıt vermedi.',
+      offline: true,
+    };
+  }
 }
 
 export async function storageGet<T>(key: string): Promise<T | null> {
@@ -47,15 +55,13 @@ export async function storageRemove(key: string): Promise<void> {
   window.localStorage.removeItem(key);
 }
 
-// Must be called directly inside a UI click handler to preserve the Chrome user gesture.
-export async function ensureOriginPermission(apiBaseUrl: string): Promise<boolean> {
-  if (!isExtensionRuntime() || !chrome.permissions) return true;
+// Must be called directly inside a UI click handler with no prior await to preserve user gesture.
+export function ensureOriginPermission(apiBaseUrl: string): Promise<boolean> {
+  if (!isExtensionRuntime() || !chrome.permissions) return Promise.resolve(true);
   const parsed = new URL(apiBaseUrl);
   if (parsed.hostname === '127.0.0.1' || parsed.hostname === 'localhost') {
-    return true;
+    return Promise.resolve(true);
   }
   const originPattern = `${parsed.origin}/*`;
-  const already = await chrome.permissions.contains({ origins: [originPattern] });
-  if (already) return true;
   return chrome.permissions.request({ origins: [originPattern] });
 }

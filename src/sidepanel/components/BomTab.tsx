@@ -1,10 +1,22 @@
-import { AlertTriangle, CheckCircle2, ExternalLink, Lock, Plus, Search, Trash2 } from 'lucide-react';
+import {
+  AlertTriangle,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  ExternalLink,
+  Filter,
+  Lock,
+  Plus,
+  Search,
+  Trash2,
+} from 'lucide-react';
 import { useState } from 'react';
 import {
   BOM_STATUSES,
   MATCH_CONFIDENCES,
   STOCK_STATUSES,
   createEmptyBomItem,
+  createSampleBomItems,
   type BomStatus,
   type MatchConfidence,
   type StockStatus,
@@ -14,25 +26,63 @@ import { buildFallbackSearchUrls } from '../../shared/stores';
 import { sendBackgroundMessage } from '../chromeBridge';
 import { useWorkspaceStore } from '../store';
 
-const STATUS_BADGE: Record<BomStatus, string> = {
-  confirmed: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
-  inferred_required: 'bg-amber-500/20 text-amber-200 border-amber-400/50',
-  optional_or_assumed: 'bg-slate-700/60 text-slate-300 border-slate-600',
-};
+function getStatusStyle(status: BomStatus): React.CSSProperties {
+  if (status === 'confirmed') {
+    return {
+      color: 'var(--status-ok)',
+      backgroundColor: 'var(--status-ok-bg)',
+      borderColor: 'var(--status-ok-border)',
+    };
+  }
+  if (status === 'inferred_required') {
+    return {
+      color: 'var(--status-warn)',
+      backgroundColor: 'var(--status-warn-bg)',
+      borderColor: 'var(--status-warn-border)',
+    };
+  }
+  return {
+    color: 'var(--text-secondary)',
+    backgroundColor: 'var(--bg-subtle)',
+    borderColor: 'var(--border-subtle)',
+  };
+}
 
-const CONFIDENCE_BADGE: Record<MatchConfidence, string> = {
-  exact: 'bg-sky-500/15 text-sky-300 border-sky-500/30',
-  partial: 'bg-yellow-500/15 text-yellow-200 border-yellow-500/40',
-  ambiguous: 'bg-rose-500/20 text-rose-200 border-rose-400/50',
-  unmatched: 'bg-slate-800 text-slate-400 border-slate-700',
-};
+function getConfidenceStyle(confidence: MatchConfidence): React.CSSProperties {
+  if (confidence === 'exact') {
+    return {
+      color: 'var(--status-ok)',
+      backgroundColor: 'var(--status-ok-bg)',
+      borderColor: 'var(--status-ok-border)',
+    };
+  }
+  if (confidence === 'partial') {
+    return {
+      color: 'var(--status-warn)',
+      backgroundColor: 'var(--status-warn-bg)',
+      borderColor: 'var(--status-warn-border)',
+    };
+  }
+  if (confidence === 'ambiguous') {
+    return {
+      color: 'var(--status-err)',
+      backgroundColor: 'var(--status-err-bg)',
+      borderColor: 'var(--status-err-border)',
+    };
+  }
+  return {
+    color: 'var(--text-muted)',
+    backgroundColor: 'var(--bg-input)',
+    borderColor: 'var(--border-subtle)',
+  };
+}
 
-const STOCK_BADGE: Record<StockStatus, string> = {
-  in_stock: 'text-emerald-300',
-  low_stock: 'text-amber-300',
-  out_of_stock: 'text-rose-300',
-  unknown: 'text-slate-400',
-};
+function getStockColor(stock: StockStatus): string {
+  if (stock === 'in_stock') return 'var(--status-ok)';
+  if (stock === 'low_stock') return 'var(--status-warn)';
+  if (stock === 'out_of_stock') return 'var(--status-err)';
+  return 'var(--text-muted)';
+}
 
 export function BomTab() {
   const {
@@ -40,6 +90,7 @@ export function BomTab() {
     activeProjectId,
     settings,
     addItem,
+    importItems,
     updateItemBom,
     removeItem,
     attachCandidates,
@@ -48,6 +99,7 @@ export function BomTab() {
   } = useWorkspaceStore();
 
   const [onlyAttention, setOnlyAttention] = useState(false);
+  const [filterText, setFilterText] = useState('');
   const [newPartName, setNewPartName] = useState('');
   const [searchingId, setSearchingId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -59,10 +111,19 @@ export function BomTab() {
     item.bom.status === 'inferred_required' || item.bom.match_confidence === 'ambiguous';
 
   const attentionCount = project.items.filter(isAttention).length;
+  const lockedCount = project.items.filter((i) => i.selectionLocked).length;
 
-  // Surface inferred_required and ambiguous items first.
+  const queryNorm = filterText.trim().toLowerCase();
   const visibleItems = [...project.items]
     .filter((item) => (!onlyAttention ? true : isAttention(item)))
+    .filter((item) => {
+      if (!queryNorm) return true;
+      return (
+        item.bom.canonical_name.toLowerCase().includes(queryNorm) ||
+        item.bom.raw_name.toLowerCase().includes(queryNorm) ||
+        item.bom.notes.toLowerCase().includes(queryNorm)
+      );
+    })
     .sort((a, b) => Number(isAttention(b)) - Number(isAttention(a)));
 
   const handleQuickAdd = (e: React.FormEvent) => {
@@ -120,35 +181,77 @@ export function BomTab() {
           type="text"
           value={newPartName}
           onChange={(e) => setNewPartName(e.target.value)}
-          placeholder="Yeni parça ekle (örn. AMS1117 3.3V)"
-          className="flex-1 rounded-md border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs text-slate-100 placeholder:text-slate-500 focus:border-sky-500 focus:outline-none"
+          aria-label="Yeni bileşen adı"
+          placeholder="Bileşen ekle (örn. AMS1117 3.3V)"
+          className="wb-input flex-1 px-2.5 py-2 text-xs"
         />
         <button
           type="submit"
-          className="inline-flex items-center gap-1 rounded-md bg-sky-600 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-sky-500"
+          disabled={!newPartName.trim()}
+          className="wb-btn-primary inline-flex items-center gap-1 px-3 py-2 text-xs"
         >
-          <Plus className="h-3.5 w-3.5" />
+          <Plus className="h-3.5 w-3.5" aria-hidden="true" />
           Ekle
         </button>
       </form>
 
-      <div className="flex items-center justify-between text-[11px] text-slate-400">
-        <span>
-          Toplam <strong className="text-slate-200">{project.items.length}</strong> kalem
-        </span>
+      <div className="flex flex-wrap items-center justify-between gap-2 text-[11px]">
+        <div className="flex items-center gap-2 text-[var(--text-muted)]">
+          <span>
+            <strong className="font-mono-tech tabular-nums text-[var(--text-primary)]">
+              {project.items.length}
+            </strong>{' '}
+            kalem
+          </span>
+          <span aria-hidden="true">/</span>
+          <span>
+            <strong className="font-mono-tech tabular-nums text-[var(--status-ok)]">
+              {lockedCount}
+            </strong>{' '}
+            onaylı
+          </span>
+        </div>
+
         <button
           type="button"
           onClick={() => setOnlyAttention((v) => !v)}
-          className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 ${
+          aria-pressed={onlyAttention}
+          className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border px-2 py-1 text-[11px] font-medium whitespace-nowrap transition-colors"
+          style={
             onlyAttention
-              ? 'border-amber-400/60 bg-amber-500/20 text-amber-200'
-              : 'border-slate-700 bg-slate-900 text-slate-300 hover:border-slate-600'
-          }`}
+              ? {
+                  borderColor: 'var(--status-warn-border)',
+                  backgroundColor: 'var(--status-warn-bg)',
+                  color: 'var(--status-warn)',
+                }
+              : {
+                  borderColor: 'var(--border-subtle)',
+                  backgroundColor: 'var(--bg-surface)',
+                  color: 'var(--text-secondary)',
+                }
+          }
         >
-          <AlertTriangle className="h-3 w-3" />
-          İnceleme Gereken ({attentionCount})
+          <AlertTriangle className="h-3 w-3" aria-hidden="true" />
+          İnceleme (<span className="font-mono-tech tabular-nums">{attentionCount}</span>)
         </button>
       </div>
+
+      {project.items.length > 3 && (
+        <div className="relative">
+          <Filter
+            className="pointer-events-none absolute left-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-[var(--text-muted)]"
+            aria-hidden="true"
+          />
+          <input
+            type="search"
+            value={filterText}
+            onChange={(e) => setFilterText(e.target.value)}
+            aria-label="BOM listesinde filtrele"
+            placeholder="Listede filtrele..."
+            className="wb-input w-full py-1.5 pl-7 pr-2.5 text-[11px]"
+          />
+        </div>
+      )}
 
       <div className="space-y-2">
         {visibleItems.map((entry) => {
@@ -158,26 +261,33 @@ export function BomTab() {
           const selected = entry.candidates.find((c) => c.id === entry.selectedCandidateId);
 
           return (
-            <div
+            <article
               key={entry.id}
-              className={`rounded-lg border p-2.5 text-xs transition ${
+              className="wb-card p-3 text-xs transition-colors"
+              style={
                 highlighted
-                  ? 'border-amber-500/50 bg-amber-950/15'
-                  : 'border-slate-800 bg-slate-900/70'
-              }`}
+                  ? {
+                      borderColor: 'var(--status-warn-border)',
+                    }
+                  : undefined
+              }
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
                   <button
                     type="button"
                     onClick={() => setExpandedId(expanded ? null : entry.id)}
-                    className="text-left font-medium text-slate-100 hover:text-sky-300"
+                    aria-expanded={expanded}
+                    className="text-left text-[13px] font-semibold leading-snug text-[var(--text-primary)] hover:text-[var(--accent)]"
                   >
                     {bom.canonical_name}
                   </button>
-                  <div className="truncate text-[11px] text-slate-400">Ham: {bom.raw_name}</div>
+                  <div className="mt-0.5 truncate text-[11px] text-[var(--text-muted)]">
+                    Ham: {bom.raw_name}
+                  </div>
                 </div>
-                <div className="flex items-center gap-1">
+
+                <div className="flex shrink-0 items-center gap-1">
                   <input
                     type="number"
                     min={1}
@@ -194,45 +304,61 @@ export function BomTab() {
                         updateItemBom(entry.id, { quantity: n });
                       }
                     }}
+                    aria-label={`${bom.canonical_name} adedi`}
                     title="Adet (boş = null)"
-                    className="w-12 rounded border border-slate-700 bg-slate-950 px-1.5 py-0.5 text-center text-xs text-slate-100"
+                    className="wb-input font-mono-tech tabular-nums w-12 px-1.5 py-1 text-center text-xs"
                   />
                   <button
                     type="button"
                     onClick={() => removeItem(entry.id)}
+                    aria-label={`${bom.canonical_name} kalemini sil`}
                     title="Kalemi sil"
-                    className="rounded p-1 text-slate-500 hover:bg-slate-800 hover:text-rose-400"
+                    className="wb-btn-ghost p-1.5 hover:text-[var(--status-err)]"
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                   </button>
                 </div>
               </div>
 
-              <div className="mt-2 flex flex-wrap items-center gap-1 text-[10px]">
-                <span className={`rounded border px-1.5 py-0.5 ${STATUS_BADGE[bom.status]}`}>
+              <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[10px]">
+                <span
+                  className="font-mono-tech rounded-[var(--radius-sm)] border px-1.5 py-0.5"
+                  style={getStatusStyle(bom.status)}
+                >
                   {bom.status}
                 </span>
                 <span
-                  className={`rounded border px-1.5 py-0.5 ${CONFIDENCE_BADGE[bom.match_confidence]}`}
+                  className="font-mono-tech rounded-[var(--radius-sm)] border px-1.5 py-0.5"
+                  style={getConfidenceStyle(bom.match_confidence)}
                 >
                   {bom.match_confidence}
                 </span>
-                <span className={`px-1 font-medium ${STOCK_BADGE[bom.stock_status]}`}>
+                <span
+                  className="font-mono-tech px-0.5 font-medium"
+                  style={{ color: getStockColor(bom.stock_status) }}
+                >
                   {bom.stock_status}
                 </span>
                 {entry.selectionLocked && (
-                  <span className="inline-flex items-center gap-0.5 rounded bg-emerald-500/15 px-1.5 py-0.5 text-emerald-300">
-                    <Lock className="h-2.5 w-2.5" />
+                  <span
+                    className="inline-flex items-center gap-0.5 rounded-[var(--radius-sm)] border px-1.5 py-0.5 font-medium"
+                    style={{
+                      color: 'var(--status-ok)',
+                      backgroundColor: 'var(--status-ok-bg)',
+                      borderColor: 'var(--status-ok-border)',
+                    }}
+                  >
+                    <Lock className="h-2.5 w-2.5" aria-hidden="true" />
                     Onaylı
                   </span>
                 )}
               </div>
 
               {selected && (
-                <div className="mt-1.5 flex items-center justify-between rounded bg-slate-950/80 px-2 py-1 text-[11px]">
-                  <span className="truncate text-slate-300">
-                    {selected.store}:{' '}
-                    <strong className="text-slate-100">
+                <div className="wb-inset mt-2 flex items-center justify-between gap-2 px-2.5 py-1.5 text-[11px]">
+                  <span className="truncate text-[var(--text-secondary)]">
+                    <span className="font-mono-tech">{selected.store}</span>:{' '}
+                    <strong className="font-mono-tech tabular-nums text-[var(--text-primary)]">
                       {selected.unitPrice !== null
                         ? `${selected.unitPrice.toFixed(2)} ${selected.currency}`
                         : 'Fiyat yok'}
@@ -242,21 +368,22 @@ export function BomTab() {
                     href={selected.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="ml-2 text-sky-400 hover:text-sky-300"
+                    aria-label={`${selected.title} ürün sayfasını aç`}
+                    className="shrink-0 text-[var(--accent)] hover:underline"
                   >
-                    <ExternalLink className="h-3 w-3" />
+                    <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
                   </a>
                 </div>
               )}
 
-              <div className="mt-2 flex flex-wrap gap-1.5">
+              <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
                 <button
                   type="button"
                   disabled={searchingId === entry.id}
                   onClick={() => void handleApiSearch(entry)}
-                  className="inline-flex items-center gap-1 rounded border border-slate-700 bg-slate-800 px-2 py-1 text-[11px] text-slate-200 hover:bg-slate-700 disabled:opacity-50"
+                  className="wb-btn-secondary inline-flex items-center gap-1 px-2 py-1 text-[11px]"
                 >
-                  <Search className="h-3 w-3" />
+                  <Search className="h-3 w-3" aria-hidden="true" />
                   {searchingId === entry.id ? 'Aranıyor...' : 'API Ara'}
                 </button>
                 <button
@@ -264,121 +391,145 @@ export function BomTab() {
                   onClick={() =>
                     void handleOpenFallbackTabs(bom.search_queries[0] || bom.canonical_name)
                   }
-                  className="inline-flex items-center gap-1 rounded border border-slate-700 bg-slate-900 px-2 py-1 text-[11px] text-slate-300 hover:bg-slate-800"
+                  className="wb-btn-secondary inline-flex items-center gap-1 px-2 py-1 text-[11px]"
                 >
-                  <ExternalLink className="h-3 w-3" />
+                  <ExternalLink className="h-3 w-3" aria-hidden="true" />
                   6 Mağaza (?q=)
                 </button>
                 <button
                   type="button"
                   onClick={() => setExpandedId(expanded ? null : entry.id)}
-                  className="ml-auto text-[11px] text-slate-400 hover:text-slate-200"
+                  aria-expanded={expanded}
+                  className="wb-btn-ghost ml-auto inline-flex items-center gap-0.5 px-1.5 py-1 text-[11px]"
                 >
-                  {expanded ? 'Gizle' : `Detay (${entry.candidates.length})`}
+                  <span>{expanded ? 'Gizle' : `Detay (${entry.candidates.length})`}</span>
+                  {expanded ? (
+                    <ChevronUp className="h-3 w-3" aria-hidden="true" />
+                  ) : (
+                    <ChevronDown className="h-3 w-3" aria-hidden="true" />
+                  )}
                 </button>
               </div>
 
               {expanded && (
-                <div className="mt-2.5 space-y-2 border-t border-slate-800 pt-2">
+                <div className="mt-3 space-y-2.5 border-t border-[var(--border-subtle)] pt-2.5">
                   <div className="grid grid-cols-3 gap-1.5">
-                    <select
-                      value={bom.status}
-                      onChange={(e) =>
-                        updateItemBom(entry.id, { status: e.target.value as BomStatus })
-                      }
-                      className="rounded border border-slate-700 bg-slate-950 px-1.5 py-1 text-[11px]"
-                    >
-                      {BOM_STATUSES.map((s) => (
-                        <option key={s} value={s}>
-                          {s}
-                        </option>
-                      ))}
-                    </select>
-                    <select
-                      value={bom.match_confidence}
-                      onChange={(e) =>
-                        updateItemBom(entry.id, {
-                          match_confidence: e.target.value as MatchConfidence,
-                        })
-                      }
-                      className="rounded border border-slate-700 bg-slate-950 px-1.5 py-1 text-[11px]"
-                    >
-                      {MATCH_CONFIDENCES.map((c) => (
-                        <option key={c} value={c}>
-                          {c}
-                        </option>
-                      ))}
-                    </select>
-                    <select
-                      value={bom.stock_status}
-                      onChange={(e) =>
-                        updateItemBom(entry.id, {
-                          stock_status: e.target.value as StockStatus,
-                        })
-                      }
-                      className="rounded border border-slate-700 bg-slate-950 px-1.5 py-1 text-[11px]"
-                    >
-                      {STOCK_STATUSES.map((s) => (
-                        <option key={s} value={s}>
-                          {s}
-                        </option>
-                      ))}
-                    </select>
+                    <label className="space-y-1">
+                      <span className="block text-[10px] text-[var(--text-muted)]">Durum</span>
+                      <select
+                        value={bom.status}
+                        onChange={(e) =>
+                          updateItemBom(entry.id, { status: e.target.value as BomStatus })
+                        }
+                        className="wb-input w-full px-1.5 py-1 text-[11px]"
+                      >
+                        {BOM_STATUSES.map((s) => (
+                          <option key={s} value={s}>
+                            {s}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="space-y-1">
+                      <span className="block text-[10px] text-[var(--text-muted)]">Güven</span>
+                      <select
+                        value={bom.match_confidence}
+                        onChange={(e) =>
+                          updateItemBom(entry.id, {
+                            match_confidence: e.target.value as MatchConfidence,
+                          })
+                        }
+                        className="wb-input w-full px-1.5 py-1 text-[11px]"
+                      >
+                        {MATCH_CONFIDENCES.map((c) => (
+                          <option key={c} value={c}>
+                            {c}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="space-y-1">
+                      <span className="block text-[10px] text-[var(--text-muted)]">Stok</span>
+                      <select
+                        value={bom.stock_status}
+                        onChange={(e) =>
+                          updateItemBom(entry.id, {
+                            stock_status: e.target.value as StockStatus,
+                          })
+                        }
+                        className="wb-input w-full px-1.5 py-1 text-[11px]"
+                      >
+                        {STOCK_STATUSES.map((s) => (
+                          <option key={s} value={s}>
+                            {s}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
                   </div>
 
-                  <textarea
-                    rows={2}
-                    value={bom.notes}
-                    onChange={(e) => updateItemBom(entry.id, { notes: e.target.value })}
-                    placeholder="Notlar, çakışmalar, doğrulama gereksinimleri..."
-                    className="w-full rounded border border-slate-700 bg-slate-950 p-1.5 text-[11px] text-slate-200"
-                  />
+                  <label className="block space-y-1">
+                    <span className="block text-[10px] text-[var(--text-muted)]">
+                      Teknik Notlar ve Çakışmalar
+                    </span>
+                    <textarea
+                      rows={2}
+                      value={bom.notes}
+                      onChange={(e) => updateItemBom(entry.id, { notes: e.target.value })}
+                      placeholder="Voltaj, kılıf veya pin dizilimi notu ekleyin..."
+                      className="wb-input w-full p-2 text-[11px]"
+                    />
+                  </label>
 
-                  <div className="text-[10px] text-slate-400">
+                  <div className="font-mono-tech text-[10px] text-[var(--text-muted)]">
                     Kaynaklar: {bom.source_files.join(', ')}
                   </div>
 
                   {entry.candidates.length > 0 && (
-                    <div className="space-y-1">
-                      <div className="text-[10px] font-medium text-slate-400">
-                        Aday Kanıtlar (sorgu/okuma anına aittir):
+                    <div className="space-y-1.5">
+                      <div className="text-[10px] font-medium text-[var(--text-secondary)]">
+                        Aday Kanıtlar (sorgu anına aittir)
                       </div>
                       {entry.candidates.map((cand) => {
                         const isChosen = entry.selectedCandidateId === cand.id;
                         return (
                           <div
                             key={cand.id}
-                            className={`rounded border p-1.5 text-[11px] ${
+                            className="wb-inset p-2 text-[11px]"
+                            style={
                               isChosen
-                                ? 'border-sky-500/60 bg-sky-950/30'
-                                : 'border-slate-800 bg-slate-950/70'
-                            }`}
+                                ? {
+                                    borderColor: 'var(--accent)',
+                                    backgroundColor: 'var(--accent-soft)',
+                                  }
+                                : undefined
+                            }
                           >
                             <div className="flex items-start justify-between gap-2">
                               <a
                                 href={cand.url}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="line-clamp-2 text-slate-200 hover:text-sky-300"
+                                className="line-clamp-2 font-medium text-[var(--text-primary)] hover:text-[var(--accent)]"
                               >
                                 {cand.title}
                               </a>
-                              <span className="shrink-0 font-semibold text-slate-100">
+                              <span className="font-mono-tech tabular-nums shrink-0 font-semibold text-[var(--text-primary)]">
                                 {cand.unitPrice !== null
                                   ? `${cand.unitPrice.toFixed(2)} ${cand.currency}`
-                                  : '—'}
+                                  : 'Fiyat yok'}
                               </span>
                             </div>
-                            <div className="mt-1 flex items-center justify-between text-[10px] text-slate-400">
-                              <span>
-                                {cand.store} · {cand.stockStatus} ·{' '}
+                            <div className="mt-1.5 flex items-center justify-between gap-2 text-[10px] text-[var(--text-muted)]">
+                              <span className="font-mono-tech tabular-nums truncate">
+                                {cand.store} / {cand.stockStatus} /{' '}
                                 {new Date(cand.observedAt).toLocaleTimeString('tr-TR')}
                               </span>
-                              <div className="flex gap-1">
+                              <div className="flex shrink-0 gap-1">
                                 <button
                                   type="button"
                                   onClick={() => selectCandidate(entry.id, cand.id, false)}
-                                  className="rounded border border-slate-700 px-1.5 py-0.5 text-slate-300 hover:bg-slate-800"
+                                  className="wb-btn-secondary px-2 py-0.5 text-[10px]"
                                 >
                                   Seç
                                 </button>
@@ -386,9 +537,14 @@ export function BomTab() {
                                   type="button"
                                   onClick={() => selectCandidate(entry.id, cand.id, true)}
                                   title="Kullanıcı onayıyla kesin eşleşme (exact) olarak kilitle"
-                                  className="inline-flex items-center gap-0.5 rounded bg-emerald-700/80 px-1.5 py-0.5 text-white hover:bg-emerald-600"
+                                  className="inline-flex items-center gap-0.5 rounded-[var(--radius-sm)] border px-2 py-0.5 text-[10px] font-semibold whitespace-nowrap"
+                                  style={{
+                                    borderColor: 'var(--status-ok-border)',
+                                    backgroundColor: 'var(--status-ok-bg)',
+                                    color: 'var(--status-ok)',
+                                  }}
                                 >
-                                  <CheckCircle2 className="h-2.5 w-2.5" />
+                                  <CheckCircle2 className="h-2.5 w-2.5" aria-hidden="true" />
                                   Onayla
                                 </button>
                               </div>
@@ -400,13 +556,44 @@ export function BomTab() {
                   )}
                 </div>
               )}
-            </div>
+            </article>
           );
         })}
 
         {visibleItems.length === 0 && (
-          <div className="rounded-lg border border-dashed border-slate-800 p-6 text-center text-xs text-slate-500">
-            Gösterilecek BOM kalemi yok.
+          <div className="wb-card border-dashed p-5 text-center">
+            <p className="text-xs font-medium text-[var(--text-primary)]">
+              {onlyAttention || queryNorm
+                ? 'Filtreyle eşleşen BOM kalemi bulunamadı.'
+                : 'Bu projede henüz BOM kalemi yok.'}
+            </p>
+            <p className="mt-1 text-[11px] text-[var(--text-muted)]">
+              {onlyAttention || queryNorm
+                ? 'Tüm kalemleri görmek için etkin filtreyi temizleyin.'
+                : 'Yukarıdan yeni bileşen ekleyin, mağaza sayfasından yakalayın veya örnek listeyi yükleyin.'}
+            </p>
+            <div className="mt-3 flex justify-center gap-2">
+              {onlyAttention || queryNorm ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOnlyAttention(false);
+                    setFilterText('');
+                  }}
+                  className="wb-btn-secondary px-3 py-1.5 text-[11px]"
+                >
+                  Filtreyi Temizle
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => importItems(createSampleBomItems(), 'replace')}
+                  className="wb-btn-secondary px-3 py-1.5 text-[11px]"
+                >
+                  Örnek ESP32 BOM Yükle
+                </button>
+              )}
+            </div>
           </div>
         )}
       </div>

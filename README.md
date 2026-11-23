@@ -4,13 +4,14 @@
 
 # bomTR
 
+[![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-Y%C3%BCkle-D97706?logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/mllknkaempcjocdjibelcjohjadnffep)
 [![CI](https://github.com/AtaCanYmc/bom-tr/actions/workflows/ci.yml/badge.svg)](https://github.com/AtaCanYmc/bom-tr/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/AtaCanYmc/bom-tr?include_prereleases&label=s%C3%BCr%C3%BCm)](https://github.com/AtaCanYmc/bom-tr/releases)
 [![License: MIT](https://img.shields.io/github/license/AtaCanYmc/bom-tr)](LICENSE)
 [![Manifest V3](https://img.shields.io/badge/Chrome-Manifest%20V3-0EA5E9)](public/manifest.json)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-FE5196)](https://www.conventionalcommits.org)
 
-Türkçe | [English](README.en.md) | [Web Sitesi](https://atacanymc.github.io/bom-tr/)
+Türkçe | [English](README.en.md) | [Chrome Web Store](https://chromewebstore.google.com/detail/mllknkaempcjocdjibelcjohjadnffep) | [Web Sitesi](https://atacanymc.github.io/bom-tr/)
 
 [![bomTR Tanıtım Videosu](docs/assets/banner-hero.jpg)](https://www.youtube.com/watch?v=l9TjYiBdo7w)
 
@@ -54,6 +55,13 @@ flowchart LR
 ```
 
 ## Kurulum ve Hızlı Başlangıç
+
+### Chrome Web Store (Önerilen)
+
+1. [Chrome Web Store üzerinden bomTR sayfasını açın](https://chromewebstore.google.com/detail/mllknkaempcjocdjibelcjohjadnffep) ve **Chrome'a Ekle** düğmesine tıklayın.
+2. Araç çubuğundaki **bomTR** simgesine tıklayın veya `Ctrl+Shift+B` (`Cmd+Shift+B`) kısayoluyla yan paneli açın.
+
+### Kaynaktan Derleme
 
 ```bash
 make install

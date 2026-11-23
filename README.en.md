@@ -4,13 +4,14 @@
 
 # bomTR
 
+[![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-Install-D97706?logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/mllknkaempcjocdjibelcjohjadnffep)
 [![CI](https://github.com/AtaCanYmc/bom-tr/actions/workflows/ci.yml/badge.svg)](https://github.com/AtaCanYmc/bom-tr/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/AtaCanYmc/bom-tr?include_prereleases&label=release)](https://github.com/AtaCanYmc/bom-tr/releases)
 [![License: MIT](https://img.shields.io/github/license/AtaCanYmc/bom-tr)](LICENSE)
 [![Manifest V3](https://img.shields.io/badge/Chrome-Manifest%20V3-0EA5E9)](public/manifest.json)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-FE5196)](https://www.conventionalcommits.org)
 
-[Türkçe](README.md) | English | [Website](https://atacanymc.github.io/bom-tr/)
+[Türkçe](README.md) | English | [Chrome Web Store](https://chromewebstore.google.com/detail/mllknkaempcjocdjibelcjohjadnffep) | [Website](https://atacanymc.github.io/bom-tr/)
 
 [![bomTR Launch Demo Video](docs/assets/banner-hero.jpg)](https://www.youtube.com/watch?v=l9TjYiBdo7w)
 
@@ -54,6 +55,13 @@ flowchart LR
 ```
 
 ## Quick Start
+
+### Install from Chrome Web Store (Recommended)
+
+1. Open [bomTR on the Chrome Web Store](https://chromewebstore.google.com/detail/mllknkaempcjocdjibelcjohjadnffep) and click **Add to Chrome**.
+2. Click the **bomTR** toolbar icon or press `Ctrl+Shift+B` (`Cmd+Shift+B`) to open the Side Panel.
+
+### Build from Source
 
 ```bash
 make install

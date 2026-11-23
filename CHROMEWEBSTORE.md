@@ -113,7 +113,7 @@ https://github.com/AtaCanYmc/bom-tr
 
 | Version | Date | Changes | Status |
 | :--- | :--- | :--- | :--- |
-| 0.2.0 | 2026-11-23 | Added 6-store HTML fixture tests, KiCad/EasyEDA CSV import & export, per-project currency/shipping overrides, 5-language i18n (TR/EN/FR/DE/ES), light/dark OKLCH UI redesign, keyboard shortcut. | Draft |
+| 0.1.3 | 2026-11-23 | Security hardening (URL sanitization, MV3 sender checks, CSV formula neutralization), synchronous sidePanel.open gesture fix, 6-store HTML fixture tests, KiCad/EasyEDA CSV import & export, per-project currency/shipping overrides, 5-language i18n (TR/EN/FR/DE/ES), light/dark OKLCH UI redesign, keyboard shortcut. | Draft |
 | 0.1.2 | 2026-11-23 | CI Makefile portability fix, governance docs, initial MV3 release package. | Draft |
 
 ## Review Notes

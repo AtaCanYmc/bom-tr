@@ -8,13 +8,17 @@ const CONTEXT_MENU_ID = 'bomtr-add-to-bom';
 const MAX_BATCH_TABS = 12;
 
 async function setupExtension(): Promise<void> {
-  await chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
-  await chrome.contextMenus.removeAll();
-  chrome.contextMenus.create({
-    id: CONTEXT_MENU_ID,
-    title: "bomTR: BOM'a Ekle",
-    contexts: ['selection', 'page'],
-  });
+  try {
+    await chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
+    await chrome.contextMenus.removeAll();
+    chrome.contextMenus.create({
+      id: CONTEXT_MENU_ID,
+      title: "bomTR: BOM'a Ekle",
+      contexts: ['selection', 'page'],
+    });
+  } catch (err) {
+    console.error('bomTR setupExtension failed:', err);
+  }
 }
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -22,7 +26,7 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 chrome.runtime.onStartup.addListener(() => {
-  void chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
+  void chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
 });
 
 async function flashBadge(text: string, color: string): Promise<void> {
@@ -95,47 +99,50 @@ async function captureTabProduct(tabId: number, tabUrl?: string): Promise<PageCa
   }
 }
 
-chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId !== CONTEXT_MENU_ID) return;
 
-  const selectedText = info.selectionText?.trim() ?? '';
-  let payload: {
-    id: string;
-    kind: 'selection' | 'page';
-    text?: string;
-    capture?: PageCaptureResult;
-    createdAt: string;
-  };
-
-  if (selectedText) {
-    payload = {
-      id: crypto.randomUUID(),
-      kind: 'selection',
-      text: selectedText,
-      createdAt: new Date().toISOString(),
-    };
-  } else if (tab?.id !== undefined) {
-    const capture = await captureTabProduct(tab.id, tab.url);
-    payload = {
-      id: crypto.randomUUID(),
-      kind: 'page',
-      capture,
-      createdAt: new Date().toISOString(),
-    };
-  } else {
-    return;
-  }
-
-  await chrome.storage.local.set({ [PENDING_CONTEXT_ITEM_KEY]: payload });
-  await flashBadge('+1', '#10b981');
-
+  // Open side panel synchronously before any await so Chrome preserves the user gesture.
   if (tab?.windowId !== undefined) {
-    try {
-      await chrome.sidePanel.open({ windowId: tab.windowId });
-    } catch {
-      // Side panel may already be open or blocked by browser context.
-    }
+    void chrome.sidePanel.open({ windowId: tab.windowId }).catch(() => {});
   }
+
+  void (async () => {
+    try {
+      const selectedText = info.selectionText?.trim() ?? '';
+      let payload: {
+        id: string;
+        kind: 'selection' | 'page';
+        text?: string;
+        capture?: PageCaptureResult;
+        createdAt: string;
+      };
+
+      if (selectedText) {
+        payload = {
+          id: crypto.randomUUID(),
+          kind: 'selection',
+          text: selectedText,
+          createdAt: new Date().toISOString(),
+        };
+      } else if (tab?.id !== undefined) {
+        const capture = await captureTabProduct(tab.id, tab.url);
+        payload = {
+          id: crypto.randomUUID(),
+          kind: 'page',
+          capture,
+          createdAt: new Date().toISOString(),
+        };
+      } else {
+        return;
+      }
+
+      await chrome.storage.local.set({ [PENDING_CONTEXT_ITEM_KEY]: payload });
+      await flashBadge('+1', '#10b981');
+    } catch (err) {
+      console.error('bomTR context menu action failed:', err);
+    }
+  })();
 });
 
 async function openTabsStaggered(urls: string[], delayMs = 350): Promise<number> {

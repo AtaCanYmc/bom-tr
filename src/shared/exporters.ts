@@ -21,7 +21,7 @@ export function exportBomAsJson(items: WorkspaceBomItem[]): string {
 }
 
 function escapeMdCell(value: string): string {
-  return value.replace(/\|/g, '\\|').replace(/\r?\n/g, ' ');
+  return value.replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/\r?\n/g, ' ');
 }
 
 export function exportBomAsMarkdown(projectName: string, items: WorkspaceBomItem[]): string {
@@ -46,10 +46,12 @@ export function exportBomAsMarkdown(projectName: string, items: WorkspaceBomItem
 }
 
 function escapeCsvCell(value: string): string {
-  if (/[",\r\n]/.test(value)) {
-    return `"${value.replace(/"/g, '""')}"`;
+  // Neutralize spreadsheet formula injection when untrusted store text is exported to CSV.
+  const safe = /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
+  if (/[",\r\n]/.test(safe)) {
+    return `"${safe.replace(/"/g, '""')}"`;
   }
-  return value;
+  return safe;
 }
 
 export function exportBomAsCsv(items: WorkspaceBomItem[]): string {

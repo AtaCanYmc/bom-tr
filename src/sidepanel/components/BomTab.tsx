@@ -23,7 +23,7 @@ import {
   type WorkspaceBomItem,
 } from '../../shared/bom';
 import { t } from '../../shared/i18n';
-import { buildFallbackSearchUrls } from '../../shared/stores';
+import { buildFallbackSearchUrls, sanitizeHttpUrl } from '../../shared/stores';
 import { sendBackgroundMessage } from '../chromeBridge';
 import { useWorkspaceStore } from '../store';
 
@@ -367,15 +367,17 @@ export function BomTab() {
                         : t(loc, 'noPrice')}
                     </strong>
                   </span>
-                  <a
-                    href={selected.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label={`${selected.title}`}
-                    className="shrink-0 text-[var(--accent)] hover:underline"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-                  </a>
+                  {sanitizeHttpUrl(selected.url) && (
+                    <a
+                      href={sanitizeHttpUrl(selected.url)!}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label={`${selected.title}`}
+                      className="shrink-0 text-[var(--accent)] hover:underline"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                    </a>
+                  )}
                 </div>
               )}
 
@@ -513,14 +515,20 @@ export function BomTab() {
                             }
                           >
                             <div className="flex items-start justify-between gap-2">
-                              <a
-                                href={cand.url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="line-clamp-2 font-medium text-[var(--text-primary)] hover:text-[var(--accent)]"
-                              >
-                                {cand.title}
-                              </a>
+                              {sanitizeHttpUrl(cand.url) ? (
+                                <a
+                                  href={sanitizeHttpUrl(cand.url)!}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="line-clamp-2 font-medium text-[var(--text-primary)] hover:text-[var(--accent)]"
+                                >
+                                  {cand.title}
+                                </a>
+                              ) : (
+                                <span className="line-clamp-2 font-medium text-[var(--text-primary)]">
+                                  {cand.title}
+                                </span>
+                              )}
                               <span className="font-mono-tech tabular-nums shrink-0 font-semibold text-[var(--text-primary)]">
                                 {cand.unitPrice !== null
                                   ? `${cand.unitPrice.toFixed(2)} ${cand.currency}`

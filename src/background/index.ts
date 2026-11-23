@@ -210,7 +210,9 @@ async function handleMessage(message: BackgroundRequest): Promise<BackgroundResp
   }
 }
 
-chrome.runtime.onMessage.addListener((message: BackgroundRequest, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message: BackgroundRequest, sender, sendResponse) => {
+  // Reject messages from other extensions or content-script tabs; only extension UI pages may call SW.
+  if (sender.id !== chrome.runtime.id || sender.tab) return false;
   void (async () => {
     try {
       const result = await handleMessage(message);

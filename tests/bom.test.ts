@@ -20,7 +20,7 @@ import {
   parseBomCsv,
 } from '../src/shared/exporters.ts';
 import { t, type I18nKey } from '../src/shared/i18n.ts';
-import { STORES, type StoreId } from '../src/shared/stores.ts';
+import { STORES, sanitizeHttpUrl, type StoreId } from '../src/shared/stores.ts';
 import { parseAndValidateBomJson } from '../src/shared/validator.ts';
 import { createDocumentFromHtml } from './domFixture.ts';
 
@@ -277,4 +277,25 @@ test('resolves non-empty i18n strings across tr, en, fr, de, es locales', () => 
       assert.ok(value.length > 0, `Missing ${locale}.${key}`);
     }
   }
+});
+
+test('sanitizes untrusted URLs and neutralizes CSV formula injection', () => {
+  assert.equal(sanitizeHttpUrl('https://www.robotistan.com/esp32'), 'https://www.robotistan.com/esp32');
+  assert.equal(sanitizeHttpUrl('javascript:alert(1)'), null);
+  assert.equal(sanitizeHttpUrl('data:text/html,<script>alert(1)</script>'), null);
+  assert.equal(sanitizeHttpUrl('file:///etc/passwd'), null);
+
+  const sample = createSampleBomItems();
+  const formulaItem: WorkspaceBomItem = {
+    id: 'sec-1',
+    bom: { ...sample[0]!, raw_name: '=HYPERLINK("http://evil","x")', notes: 'a\\|b' },
+    candidates: [],
+    selectedCandidateId: null,
+    selectionLocked: false,
+  };
+  const csv = exportBomAsCsv([formulaItem]);
+  assert.ok(csv.includes(`"'=HYPERLINK(""http://evil"",""x"")"`));
+
+  const md = exportBomAsMarkdown('Test', [formulaItem]);
+  assert.ok(md.includes('a\\\\\\|b'));
 });

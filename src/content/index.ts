@@ -2,7 +2,8 @@ import type { ContentRequest, ContentResponse } from '../shared/messages';
 import { detectStoreFromUrl } from '../shared/stores';
 import { extractStoreProduct } from './adapters';
 
-chrome.runtime.onMessage.addListener((message: ContentRequest, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message: ContentRequest, sender, sendResponse) => {
+  if (sender.id !== chrome.runtime.id) return false;
   if (message.type !== 'READ_PRODUCT_PAGE') return false;
 
   const store = detectStoreFromUrl(window.location.href);

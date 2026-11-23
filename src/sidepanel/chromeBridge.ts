@@ -59,6 +59,9 @@ export async function storageRemove(key: string): Promise<void> {
 export function ensureOriginPermission(apiBaseUrl: string): Promise<boolean> {
   if (!isExtensionRuntime() || !chrome.permissions) return Promise.resolve(true);
   const parsed = new URL(apiBaseUrl);
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    throw new Error('Only http:// or https:// API URLs are allowed.');
+  }
   if (parsed.hostname === '127.0.0.1' || parsed.hostname === 'localhost') {
     return Promise.resolve(true);
   }

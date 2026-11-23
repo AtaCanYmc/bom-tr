@@ -2,7 +2,7 @@ import { AlertCircle, ExternalLink, PlusCircle, Radar, ScanSearch } from 'lucide
 import { useState } from 'react';
 import type { CandidateEvidence } from '../../shared/bom';
 import { t } from '../../shared/i18n';
-import { STORE_LIST, buildFallbackSearchUrls } from '../../shared/stores';
+import { STORE_LIST, buildFallbackSearchUrls, sanitizeHttpUrl } from '../../shared/stores';
 import { sendBackgroundMessage } from '../chromeBridge';
 import { useWorkspaceStore } from '../store';
 
@@ -221,14 +221,20 @@ export function CaptureCompareTab() {
               className="wb-card flex items-center justify-between gap-2 p-2.5"
             >
               <div className="min-w-0">
-                <a
-                  href={item.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="line-clamp-1 font-medium text-[var(--text-primary)] hover:text-[var(--accent)]"
-                >
-                  {item.title}
-                </a>
+                {sanitizeHttpUrl(item.url) ? (
+                  <a
+                    href={sanitizeHttpUrl(item.url)!}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="line-clamp-1 font-medium text-[var(--text-primary)] hover:text-[var(--accent)]"
+                  >
+                    {item.title}
+                  </a>
+                ) : (
+                  <span className="line-clamp-1 font-medium text-[var(--text-primary)]">
+                    {item.title}
+                  </span>
+                )}
                 <div className="font-mono-tech text-[10px] text-[var(--text-muted)]">
                   {item.store} / {item.stockStatus}
                 </div>

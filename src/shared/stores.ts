@@ -91,6 +91,17 @@ const STORE_ALIAS_MAP: Record<string, StoreId> = {
   'robot sepeti': 'robotsepeti',
 };
 
+export function sanitizeHttpUrl(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  try {
+    const parsed = new URL(raw.trim());
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return null;
+    return parsed.toString();
+  } catch {
+    return null;
+  }
+}
+
 export function normalizeStoreId(raw: string): StoreId | null {
   const key = raw.trim().toLowerCase();
   return STORE_ALIAS_MAP[key] ?? null;

@@ -6,7 +6,7 @@ import type {
   StockStatus,
   StoreCartBreakdown,
 } from '../shared/bom';
-import { STORES, normalizeStoreId } from '../shared/stores.ts';
+import { STORES, normalizeStoreId, sanitizeHttpUrl } from '../shared/stores.ts';
 
 const REQUEST_TIMEOUT_MS = 12_000;
 const HEALTH_TIMEOUT_MS = 4_000;
@@ -54,7 +54,7 @@ async function fetchJsonWithTimeout(
 
 function mapProductToCandidate(raw: Record<string, unknown>, observedAt: string): CandidateEvidence | null {
   const title = typeof raw.title === 'string' ? raw.title.trim() : '';
-  const url = typeof raw.url === 'string' ? raw.url.trim() : '';
+  const url = typeof raw.url === 'string' ? sanitizeHttpUrl(raw.url) : null;
   if (!title || !url) return null;
 
   const storeRaw = typeof raw.store === 'string' ? raw.store : 'unknown';

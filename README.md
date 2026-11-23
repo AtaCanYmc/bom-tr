@@ -10,7 +10,7 @@
 [![Manifest V3](https://img.shields.io/badge/Chrome-Manifest%20V3-0EA5E9)](public/manifest.json)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-FE5196)](https://www.conventionalcommits.org)
 
-Türkçe | [English](README.en.md)
+Türkçe | [English](README.en.md) | [Web Sitesi](https://atacanymc.github.io/bom-tr/)
 
 [![bomTR Tanıtım Videosu](docs/assets/banner-hero.jpg)](https://www.youtube.com/watch?v=l9TjYiBdo7w)
 
@@ -76,6 +76,7 @@ bom-tr/
 │   ├── PULL_REQUEST_TEMPLATE/# PR doğrulama şablonu
 │   ├── workflows/
 │   │   ├── ci.yml            # Sürüm, tip, test, derleme ve belge bağlantı kontrolü
+│   │   ├── pages.yml         # site/ klasörünü GitHub Pages üzerine dağıtır
 │   │   └── release-please.yml# Otomatik sürümleme ve ZIP sürüm yükleme akışı
 │   ├── CODEOWNERS            # İnceleme sorumluluğu tanımları
 │   └── dependabot.yml        # Haftalık npm ve GitHub Actions güncellemeleri
@@ -89,6 +90,9 @@ bom-tr/
 ├── public/
 │   ├── icons/                # 16px, 48px, 128px eklenti simgeleri
 │   └── manifest.json         # Minimum izinli Manifest V3 tanımı
+├── site/
+│   ├── .nojekyll             # Jekyll işlemesini devre dışı bırakır
+│   └── index.html            # GitHub Pages tanıtım ve indirme sayfası
 ├── src/
 │   ├── background/
 │   │   ├── index.ts          # Service worker, sağ tık menüsü, rozet ve kademeli sekme açıcı

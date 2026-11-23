@@ -1,4 +1,4 @@
-[← Ana Sayfa](../README.md) | [English README](../README.en.md)
+[← Ana Sayfa](../README.md) | [English README](../README.en.md) | [Web Sitesi](https://atacanymc.github.io/bom-tr/)
 
 # bomTR Dokümantasyon
 
@@ -20,6 +20,8 @@
 | [Gizlilik Politikası](privacy.md) | Yerel depolama, API veri sınırı ve Chrome Web Store gizlilik beyanı. |
 | [CONTRIBUTING.md](../CONTRIBUTING.md) | Geliştirme akışı, Conventional Commits kuralları ve PR doğrulama adımları. |
 | [ROADMAP.md](../ROADMAP.md) | Sürüm hedeflerine göre planlanan teknik teslimatlar. |
+| [CHROMEWEBSTORE.md](../CHROMEWEBSTORE.md) | Chrome Web Store mağaza metinleri, izin gerekçeleri ve görsel kontrol listesi. |
+| [CHANGELOG.md](../CHANGELOG.md) | Sürümlere göre değişiklik günlüğü. |
 | [LICENSE](../LICENSE) | MIT lisans metni. |
 
 ## Görseller

@@ -109,7 +109,7 @@ atacanymc@gmail.com
 https://github.com/AtaCanYmc/bom-tr/issues
 
 **Homepage URL** [RECOMMENDED]
-https://github.com/AtaCanYmc/bom-tr
+https://atacanymc.github.io/bom-tr/
 
 ## Version History
 

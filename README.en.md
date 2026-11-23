@@ -10,7 +10,7 @@
 [![Manifest V3](https://img.shields.io/badge/Chrome-Manifest%20V3-0EA5E9)](public/manifest.json)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-FE5196)](https://www.conventionalcommits.org)
 
-[Türkçe](README.md) | English
+[Türkçe](README.md) | English | [Website](https://atacanymc.github.io/bom-tr/)
 
 [![bomTR Launch Demo Video](docs/assets/banner-hero.jpg)](https://www.youtube.com/watch?v=l9TjYiBdo7w)
 
@@ -76,6 +76,7 @@ bom-tr/
 │   ├── PULL_REQUEST_TEMPLATE/# PR verification checklist
 │   ├── workflows/
 │   │   ├── ci.yml            # Version, typecheck, test, build, and doc link checks
+│   │   ├── pages.yml         # Deploys site/ to GitHub Pages
 │   │   └── release-please.yml# Automated versioning and Chrome ZIP release uploads
 │   ├── CODEOWNERS            # Review routing rules
 │   └── dependabot.yml        # Weekly npm and GitHub Actions updates
@@ -89,6 +90,9 @@ bom-tr/
 ├── public/
 │   ├── icons/                # 16px, 48px, 128px extension icons
 │   └── manifest.json         # Manifest V3 config with minimum permissions
+├── site/
+│   ├── .nojekyll             # Disables Jekyll processing on GitHub Pages
+│   └── index.html            # GitHub Pages landing and download site
 ├── src/
 │   ├── background/
 │   │   ├── index.ts          # Service worker, context menu, badge, staggered tabs

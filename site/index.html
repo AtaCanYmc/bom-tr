@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="tr" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bomTR — Chrome Side Panel BOM &amp; Türkiye Elektronik Tedarik Çalışma Alanı</title>
+  <meta name="description" content="10 alanlı bom-sourcing malzeme listelerini (BOM) Chrome Yan Panelinde yönetin, Türkiye'deki 6 elektronik bileşen mağazasında fiyat/stok kıyaslayın ve kargo dahil sepet optimizasyonu yapın." />
+  <meta property="og:title" content="bomTR — Chrome Side Panel BOM Çalışma Alanı" />
+  <meta property="og:description" content="Robotistan, Direnç.net, Robolink Market, Robo90, Motorobit ve Robot Sepeti için canlı fiyat/stok kıyaslama ve 10 alanlı BOM yönetimi." />
+  <meta property="og:image" content="https://raw.githubusercontent.com/AtaCanYmc/bom-tr/main/docs/assets/banner-hero.jpg" />
+  <link rel="icon" href="https://raw.githubusercontent.com/AtaCanYmc/bom-tr/main/public/icons/icon-128.png" />
+
+  <!-- Fonts: Space Grotesk, Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            display: ['Space Grotesk', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            surface: {
+              950: '#09090B',
+              900: '#101013',
+              850: '#141418',
+              800: '#1C1C22',
+              700: '#27272F',
+            },
+            copper: {
+              400: '#FB923C',
+              500: '#F97316',
+              600: '#EA580C',
+            },
+            solder: {
+              400: '#34D399',
+              500: '#10B981',
+            },
+            ink: {
+              primary: '#FAFAFA',
+              secondary: '#A1A1AA',
+              muted: '#71717A',
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --scrollbar-thumb: #71717A;
+      --scrollbar-track: #09090B;
+    }
+
+    html {
+      overflow-x: clip;
+      scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+      scrollbar-width: thin;
+    }
+
+    body {
+      background-color: #09090B;
+      color: #FAFAFA;
+      font-family: 'Inter', system-ui, sans-serif;
+      overflow-x: clip;
+    }
+
+    /* Subtle PCB Precision Grid */
+    .pcb-grid {
+      background-size: 48px 48px;
+      background-image:
+        linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+    }
+
+    /* Hairline Border & Ambient Glow */
+    .hairline {
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .hairline-copper {
+      border: 1px solid rgba(249, 115, 22, 0.35);
+    }
+
+    /* Scroll Reveal: compositor-only, reduced-motion safe, native CSS view() when supported */
+    @media (prefers-reduced-motion: no-preference) {
+      @supports ((animation-timeline: view()) and (animation-range: entry)) {
+        @keyframes reveal-entry {
+          from {
+            opacity: 0;
+            transform: translateY(18px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .reveal {
+          animation: reveal-entry auto linear both;
+          animation-timeline: view();
+          animation-range: entry 0% entry 35%;
+        }
+      }
+
+      @supports not ((animation-timeline: view()) and (animation-range: entry)) {
+        .reveal {
+          opacity: 0;
+          transform: translateY(18px);
+          transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal.is-visible {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    }
+
+    /* Legacy WebKit scrollbar fallback only when standard scrollbar-color is unsupported */
+    @supports not (scrollbar-color: auto) {
+      html {
+        scrollbar-width: auto;
+      }
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--scrollbar-track);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--scrollbar-thumb);
+        border-radius: 999px;
+      }
+    }
+  </style>
+</head>
+<body class="pcb-grid antialiased selection:bg-copper-500/30 selection:text-copper-400">
+
+  <!-- Sticky Architectural Header -->
+  <header class="sticky top-0 z-50 border-b border-white/[0.08] bg-surface-950/85 backdrop-blur-xl">
+    <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 sm:px-6 lg:px-8">
+      <!-- Brand -->
+      <a href="#top" class="group flex items-center gap-3">
+        <div class="relative flex h-9 w-9 items-center justify-center rounded-xl border border-copper-500/30 bg-surface-900 shadow-inner transition group-hover:border-copper-500/70">
+          <img
+            src="https://raw.githubusercontent.com/AtaCanYmc/bom-tr/main/public/icons/icon-128.png"
+            alt="bomTR logo"
+            width="24"
+            height="24"
+            class="h-6 w-6 rounded-md object-contain"
+            onerror="this.style.display='none'"
+          />
+        </div>
+        <div class="flex items-baseline gap-2">
+          <span class="font-display text-lg font-bold tracking-tight text-ink-primary">bomTR</span>
+          <span class="rounded-md border border-white/10 bg-surface-900 px-1.5 py-0.5 font-mono text-[11px] text-copper-400">v0.1.3</span>
+        </div>
+      </a>
+
+      <!-- Center Nav -->
+      <nav class="hidden items-center gap-7 text-sm text-ink-secondary md:flex">
+        <a href="#workbench" class="transition hover:text-ink-primary">Yan Panel</a>
+        <a href="#stores" class="transition hover:text-ink-primary">6 Mağaza</a>
+        <a href="#contract" class="transition hover:text-ink-primary">10-Alan Sözleşme</a>
+        <a href="#install" class="transition hover:text-ink-primary">Kurulum</a>
+      </nav>
+
+      <!-- Actions -->
+      <div class="flex items-center gap-2.5">
+        <button
+          id="langToggle"
+          type="button"
+          class="rounded-lg border border-white/10 bg-surface-900 px-2.5 py-1.5 font-mono text-xs text-ink-secondary transition hover:border-white/20 hover:text-ink-primary"
+          title="Dili Değiştir / Switch Language"
+        >
+          TR / EN
+        </button>
+        <a
+          href="https://github.com/AtaCanYmc/bom-tr"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="hidden items-center gap-1.5 rounded-lg border border-white/10 bg-surface-900 px-3 py-1.5 text-xs font-medium text-ink-secondary transition hover:border-white/20 hover:text-ink-primary sm:inline-flex"
+        >
+          <svg class="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+          <span>GitHub</span>
+        </a>
+        <a
+          href="#install"
+          class="inline-flex items-center gap-1.5 rounded-lg bg-copper-500 px-3.5 py-1.5 text-xs font-semibold text-surface-950 shadow-sm transition hover:bg-copper-400"
+        >
+          <span data-i18n="nav_download">Eklentiyi İndir</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- Hero Section: Asymmetric Architectural Split -->
+    <section class="relative overflow-hidden border-b border-white/[0.08] py-16 sm:py-24">
+      <div class="pointer-events-none absolute -top-40 right-0 h-[480px] w-[480px] rounded-full bg-copper-500/[0.07] blur-[120px]"></div>
+
+      <div class="mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 px-4 sm:px-6 lg:grid-cols-12 lg:gap-10 lg:px-8">
+        <!-- Left Copy (7 Cols) -->
+        <div class="lg:col-span-7">
+          <div class="mb-6 inline-flex flex-wrap items-center gap-2 rounded-full border border-white/10 bg-surface-900/90 px-3 py-1 text-xs text-ink-secondary">
+            <span class="h-1.5 w-1.5 rounded-full bg-solder-400"></span>
+            <span class="font-mono text-ink-primary">Manifest V3</span>
+            <span class="text-white/20">•</span>
+            <span data-i18n="hero_badge">Chrome Side Panel + Offline Ready</span>
+          </div>
+
+          <h1
+            class="font-display text-4xl font-bold leading-[1.06] tracking-tight text-ink-primary sm:text-5xl lg:text-[3.5rem]"
+            data-i18n="hero_title"
+          >
+            BOM listeni yönet.<br />
+            <span class="text-copper-400">6 mağazada</span> en net sepeti kur.
+          </h1>
+
+          <p
+            class="mt-6 max-w-2xl text-base leading-relaxed text-ink-secondary sm:text-lg"
+            data-i18n="hero_desc"
+          >
+            Donanım geliştiricileri, maker'lar ve robotik ekipleri için tasarlanmış açık kaynaklı Chrome yan panel çalışma alanı. 10 alanlı <code class="rounded bg-surface-800 px-1.5 py-0.5 font-mono text-xs text-copper-400">bom-sourcing</code> şeması, KiCad/EasyEDA CSV uyumu ve kargo eşiği dahil tek/bölünmüş sepet hesabı.
+          </p>
+
+          <!-- Primary & Secondary CTAs -->
+          <div class="mt-8 flex flex-wrap items-center gap-3.5">
+            <a
+              href="https://github.com/AtaCanYmc/bom-tr/releases"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-2.5 rounded-xl bg-copper-500 px-5 py-3 text-sm font-semibold text-surface-950 transition hover:bg-copper-400"
+            >
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span data-i18n="cta_release">GitHub Release ZIP İndir (v0.1.3)</span>
+            </a>
+            <a
+              href="https://www.youtube.com/watch?v=l9TjYiBdo7w"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-surface-900 px-5 py-3 text-sm font-medium text-ink-primary transition hover:border-white/30 hover:bg-surface-850"
+            >
+              <svg class="h-4 w-4 text-copper-400" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              <span data-i18n="cta_video">Tanıtım Videosunu İzle</span>
+            </a>
+          </div>
+
+          <!-- Technical Proof Strip -->
+          <div class="mt-10 grid grid-cols-3 gap-4 border-t border-white/[0.08] pt-6 sm:max-w-lg">
+            <div>
+              <div class="font-mono text-lg font-semibold text-ink-primary">6 Mağaza</div>
+              <div class="mt-0.5 text-xs text-ink-muted" data-i18n="stat_stores">Anlık DOM &amp; fiyat okuma</div>
+            </div>
+            <div>
+              <div class="font-mono text-lg font-semibold text-ink-primary">10 Alan</div>
+              <div class="mt-0.5 text-xs text-ink-muted" data-i18n="stat_schema">Katı BOM JSON sözleşmesi</div>
+            </div>
+            <div>
+              <div class="font-mono text-lg font-semibold text-solder-400">0 İzleme</div>
+              <div class="mt-0.5 text-xs text-ink-muted" data-i18n="stat_privacy">Tamamen yerel depolama</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Interactive Side Panel Preview (5 Cols) -->
+        <div class="lg:col-span-5">
+          <div class="rounded-2xl border border-white/10 bg-surface-900 p-4 shadow-2xl">
+            <!-- Top Bar -->
+            <div class="flex items-center justify-between border-b border-white/[0.08] pb-3">
+              <div class="flex items-center gap-2">
+                <span class="h-2.5 w-2.5 rounded-full bg-copper-500"></span>
+                <span class="font-display text-sm font-semibold text-ink-primary">bomTR Side Panel</span>
+                <span class="rounded bg-surface-800 px-1.5 py-0.5 font-mono text-[10px] text-ink-secondary">Ctrl+Shift+B</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <span class="inline-flex items-center gap-1 rounded-md border border-solder-500/30 bg-solder-500/10 px-2 py-0.5 font-mono text-[11px] text-solder-400">
+                  <span class="h-1.5 w-1.5 rounded-full bg-solder-400"></span>
+                  robo-api
+                </span>
+              </div>
+            </div>
+
+            <!-- Interactive Panel Tabs -->
+            <div class="mt-3 grid grid-cols-4 gap-1 rounded-xl bg-surface-950 p-1 font-mono text-xs">
+              <button type="button" data-panel-tab="bom" class="panel-tab rounded-lg bg-surface-800 py-1.5 font-medium text-copper-400 transition">BOM (4)</button>
+              <button type="button" data-panel-tab="capture" class="panel-tab rounded-lg py-1.5 text-ink-secondary transition hover:text-ink-primary">Yakala</button>
+              <button type="button" data-panel-tab="cart" class="panel-tab rounded-lg py-1.5 text-ink-secondary transition hover:text-ink-primary">Sepet</button>
+              <button type="button" data-panel-tab="bridge" class="panel-tab rounded-lg py-1.5 text-ink-secondary transition hover:text-ink-primary">Köprü</button>
+            </div>
+
+            <!-- Tab Content: BOM -->
+            <div id="panel-bom" class="panel-view mt-3.5 space-y-2.5">
+              <div class="rounded-xl border border-white/[0.07] bg-surface-950/90 p-3">
+                <div class="flex items-start justify-between gap-2">
+                  <div>
+                    <div class="text-sm font-medium text-ink-primary">ESP32-C3 Geliştirme Kartı</div>
+                    <div class="mt-0.5 font-mono text-[11px] text-ink-muted">raw: ESP32-C3 • src/main.cpp:4</div>
+                  </div>
+                  <span class="rounded-md bg-surface-800 px-2 py-0.5 font-mono text-xs text-ink-primary">x1</span>
+                </div>
+                <div class="mt-2.5 flex flex-wrap items-center gap-1.5 font-mono text-[10px]">
+                  <span class="rounded border border-solder-500/30 bg-solder-500/10 px-1.5 py-0.5 text-solder-400">confirmed</span>
+                  <span class="rounded border border-solder-500/30 bg-solder-500/10 px-1.5 py-0.5 text-solder-400">exact</span>
+                  <span class="rounded border border-white/10 bg-surface-800 px-1.5 py-0.5 text-ink-secondary">₺189,90 • Direnç.net</span>
+                </div>
+              </div>
+
+              <div class="rounded-xl border border-copper-500/30 bg-surface-950/90 p-3">
+                <div class="flex items-start justify-between gap-2">
+                  <div>
+                    <div class="text-sm font-medium text-ink-primary">1.3" I2C OLED Ekran Modülü</div>
+                    <div class="mt-0.5 font-mono text-[11px] text-ink-muted">raw: OLED ekran • SH1106 / SSD1306</div>
+                  </div>
+                  <span class="rounded-md bg-surface-800 px-2 py-0.5 font-mono text-xs text-ink-primary">x1</span>
+                </div>
+                <div class="mt-2.5 flex flex-wrap items-center justify-between gap-2 font-mono text-[10px]">
+                  <div class="flex items-center gap-1.5">
+                    <span class="rounded border border-solder-500/30 bg-solder-500/10 px-1.5 py-0.5 text-solder-400">confirmed</span>
+                    <span class="rounded border border-copper-500/40 bg-copper-500/15 px-1.5 py-0.5 text-copper-400">ambiguous</span>
+                  </div>
+                  <button id="approveDemoBtn" type="button" class="rounded bg-copper-500 px-2 py-0.5 font-semibold text-surface-950 transition hover:bg-copper-400">
+                    Onayla
+                  </button>
+                </div>
+              </div>
+
+              <div class="rounded-xl border border-white/[0.07] bg-surface-950/90 p-3">
+                <div class="flex items-start justify-between gap-2">
+                  <div>
+                    <div class="text-sm font-medium text-ink-primary">LiPo Pil Şarj ve Koruma Modülü</div>
+                    <div class="mt-0.5 font-mono text-[11px] text-ink-muted">TP4056 USB-C • koruma devreli</div>
+                  </div>
+                  <span class="rounded-md bg-surface-800 px-2 py-0.5 font-mono text-xs text-ink-primary">x1</span>
+                </div>
+                <div class="mt-2.5 flex flex-wrap items-center gap-1.5 font-mono text-[10px]">
+                  <span class="rounded border border-amber-400/30 bg-amber-400/10 px-1.5 py-0.5 text-amber-300">inferred_required</span>
+                  <span class="rounded border border-white/10 bg-surface-800 px-1.5 py-0.5 text-ink-secondary">₺34,50 • Robotistan</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab Content: Capture -->
+            <div id="panel-capture" class="panel-view mt-3.5 hidden space-y-3">
+              <div class="rounded-xl border border-white/[0.08] bg-surface-950 p-3">
+                <div class="flex items-center justify-between">
+                  <span class="font-mono text-[11px] text-copper-400">direnc.net aktif ürün sayfası</span>
+                  <span class="rounded bg-solder-500/10 px-1.5 py-0.5 font-mono text-[10px] text-solder-400">in_stock</span>
+                </div>
+                <div class="mt-1.5 text-sm font-medium text-ink-primary">HX711 24-Bit Yük Hücresi Amplifikatör Modülü</div>
+                <div class="mt-2 flex items-baseline justify-between border-t border-white/[0.06] pt-2 font-mono text-xs">
+                  <span class="text-ink-muted">SKU: 14892</span>
+                  <span class="text-sm font-semibold text-solder-400">₺48,20</span>
+                </div>
+              </div>
+              <div class="rounded-xl border border-white/[0.08] bg-surface-950 p-3 font-mono text-xs">
+                <div class="mb-2 text-[11px] text-ink-muted">Diğer 5 Mağaza Karşılaştırması</div>
+                <div class="flex justify-between py-1 text-ink-secondary"><span>Robolink Market</span><span class="text-ink-primary">₺46,90</span></div>
+                <div class="flex justify-between py-1 text-ink-secondary"><span>Robotistan</span><span class="text-ink-primary">₺52,00</span></div>
+                <div class="flex justify-between py-1 text-ink-muted"><span>Motorobit</span><span>stok yok</span></div>
+              </div>
+            </div>
+
+            <!-- Tab Content: Cart -->
+            <div id="panel-cart" class="panel-view mt-3.5 hidden space-y-2.5 font-mono text-xs">
+              <div class="rounded-xl border border-white/[0.08] bg-surface-950 p-3">
+                <div class="flex items-center justify-between text-ink-secondary">
+                  <span>Tek Mağaza (Robotistan)</span>
+                  <span class="text-[11px] text-ink-muted">4/4 kalem</span>
+                </div>
+                <div class="mt-2 flex items-baseline justify-between">
+                  <span class="text-[11px] text-ink-muted">Ara Toplam ₺580 + Kargo ₺49</span>
+                  <span class="text-sm font-semibold text-ink-primary">₺629,00</span>
+                </div>
+              </div>
+              <div class="rounded-xl border border-solder-500/40 bg-solder-500/[0.06] p-3">
+                <div class="flex items-center justify-between">
+                  <span class="font-semibold text-solder-400">Bölünmüş Sepet (2 Mağaza)</span>
+                  <span class="rounded bg-solder-500/20 px-1.5 py-0.5 text-[10px] text-solder-400">-₺21,00 fark</span>
+                </div>
+                <div class="mt-2 flex items-baseline justify-between">
+                  <span class="text-[11px] text-ink-secondary">Direnç.net + Robolink (Kargo dahil)</span>
+                  <span class="text-sm font-bold text-solder-400">₺608,00</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab Content: Bridge -->
+            <div id="panel-bridge" class="panel-view mt-3.5 hidden space-y-2.5">
+              <div class="rounded-xl border border-dashed border-white/15 bg-surface-950 p-3 text-center font-mono text-xs text-ink-secondary">
+                bom-sourcing JSON / KiCad CSV / EasyEDA CSV
+              </div>
+              <div class="grid grid-cols-2 gap-2 font-mono text-[11px]">
+                <div class="rounded-lg border border-white/10 bg-surface-950 px-2.5 py-2 text-ink-primary">JSON (10-field)</div>
+                <div class="rounded-lg border border-white/10 bg-surface-950 px-2.5 py-2 text-ink-primary">KiCad CSV</div>
+                <div class="rounded-lg border border-white/10 bg-surface-950 px-2.5 py-2 text-ink-primary">EasyEDA CSV</div>
+                <div class="rounded-lg border border-white/10 bg-surface-950 px-2.5 py-2 text-ink-primary">Markdown BOM</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Supported 6 Stores Strip -->
+    <section id="stores" class="border-b border-white/[0.08] bg-surface-900/50 py-10">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div>
+            <div class="font-mono text-xs uppercase tracking-wider text-copper-400" data-i18n="stores_kicker">Desteklenen Tedarik Ağı</div>
+            <p class="mt-1 text-sm text-ink-secondary" data-i18n="stores_sub">
+              Yalnızca bu 6 mağaza alan adına izin verilir; geniş <code class="font-mono text-xs text-ink-primary">&lt;all_urls&gt;</code> izni istenmez.
+            </p>
+          </div>
+          <span class="font-mono text-xs text-ink-muted">host_permissions: scoped</span>
+        </div>
+
+        <div class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          <a href="https://www.robotistan.com" target="_blank" rel="noopener noreferrer" class="group rounded-xl border border-white/[0.08] bg-surface-900 px-4 py-3.5 transition hover:border-copper-500/40">
+            <div class="font-display text-sm font-semibold text-ink-primary group-hover:text-copper-400">Robotistan</div>
+            <div class="mt-0.5 font-mono text-[11px] text-ink-muted">robotistan.com</div>
+          </a>
+          <a href="https://www.robolinkmarket.com" target="_blank" rel="noopener noreferrer" class="group rounded-xl border border-white/[0.08] bg-surface-900 px-4 py-3.5 transition hover:border-copper-500/40">
+            <div class="font-display text-sm font-semibold text-ink-primary group-hover:text-copper-400">Robolink Market</div>
+            <div class="mt-0.5 font-mono text-[11px] text-ink-muted">robolinkmarket.com</div>
+          </a>
+          <a href="https://www.robo90.com" target="_blank" rel="noopener noreferrer" class="group rounded-xl border border-white/[0.08] bg-surface-900 px-4 py-3.5 transition hover:border-copper-500/40">
+            <div class="font-display text-sm font-semibold text-ink-primary group-hover:text-copper-400">Robo90</div>
+            <div class="mt-0.5 font-mono text-[11px] text-ink-muted">robo90.com</div>
+          </a>
+          <a href="https://www.direnc.net" target="_blank" rel="noopener noreferrer" class="group rounded-xl border border-white/[0.08] bg-surface-900 px-4 py-3.5 transition hover:border-copper-500/40">
+            <div class="font-display text-sm font-semibold text-ink-primary group-hover:text-copper-400">Direnç.net</div>
+            <div class="mt-0.5 font-mono text-[11px] text-ink-muted">direnc.net</div>
+          </a>
+          <a href="https://www.motorobit.com" target="_blank" rel="noopener noreferrer" class="group rounded-xl border border-white/[0.08] bg-surface-900 px-4 py-3.5 transition hover:border-copper-500/40">
+            <div class="font-display text-sm font-semibold text-ink-primary group-hover:text-copper-400">Motorobit</div>
+            <div class="mt-0.5 font-mono text-[11px] text-ink-muted">motorobit.com</div>
+          </a>
+          <a href="https://www.robotsepeti.com" target="_blank" rel="noopener noreferrer" class="group rounded-xl border border-white/[0.08] bg-surface-900 px-4 py-3.5 transition hover:border-copper-500/40">
+            <div class="font-display text-sm font-semibold text-ink-primary group-hover:text-copper-400">Robot Sepeti</div>
+            <div class="mt-0.5 font-mono text-[11px] text-ink-muted">robotsepeti.com</div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bento Grid: Core Capabilities & Live Screenshots -->
+    <section id="workbench" class="reveal border-b border-white/[0.08] py-20">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="max-w-2xl">
+          <div class="font-mono text-xs uppercase tracking-wider text-copper-400" data-i18n="feat_kicker">Çekirdek Mimari</div>
+          <h2 class="mt-2 font-display text-3xl font-bold tracking-tight text-ink-primary sm:text-4xl" data-i18n="feat_title">
+            Tarayıcı sekmeleri arasında kaybolmadan tedarik planla.
+          </h2>
+        </div>
+
+        <div class="mt-12 grid grid-cols-1 gap-6 lg:grid-cols-12">
+          <!-- Large Feature Card 1: Capture -->
+          <div class="flex flex-col justify-between rounded-2xl border border-white/[0.08] bg-surface-900 p-6 lg:col-span-7">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="rounded-md border border-copper-500/30 bg-copper-500/10 px-2.5 py-1 font-mono text-xs text-copper-400">01 / DOM Adaptörleri</span>
+                <span class="font-mono text-xs text-ink-muted">JSON-LD + TL Parser</span>
+              </div>
+              <h3 class="mt-4 font-display text-xl font-semibold text-ink-primary" data-i18n="card1_title">
+                Sayfadan Tek Tıkla Ürün Yakalama &amp; Sağ Tık Menüsü
+              </h3>
+              <p class="mt-2 text-sm leading-relaxed text-ink-secondary" data-i18n="card1_desc">
+                Desteklenen 6 mağazada ürün sayfasındayken başlık, fiyat, stok durumu ve SKU bilgisini doğrudan BOM'a çekin. Herhangi bir GitHub README veya datasheet'te metin seçip sağ tıkla aktif listeye ekleyin.
+              </p>
+            </div>
+            <div class="mt-6 overflow-hidden rounded-xl border border-white/10 bg-surface-950">
+              <img
+                src="https://raw.githubusercontent.com/AtaCanYmc/bom-tr/main/docs/assets/screenshot-capture.jpg"
+                alt="bomTR aktif mağaza ürün yakalama ekran görüntüsü"
+                width="1024"
+                height="642"
+                class="h-auto w-full object-cover"
+                loading="lazy"
+                decoding="async"
+                onerror="this.src='https://placehold.co/960x540/101013/A1A1AA?text=bomTR+Store+Capture'"
+              />
+            </div>
+          </div>
+
+          <!-- Feature Card 2: Bridge -->
+          <div class="flex flex-col justify-between rounded-2xl border border-white/[0.08] bg-surface-900 p-6 lg:col-span-5">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="rounded-md border border-solder-500/30 bg-solder-500/10 px-2.5 py-1 font-mono text-xs text-solder-400">02 / Çift Yönlü Köprü</span>
+                <span class="font-mono text-xs text-ink-muted">KiCad • EasyEDA</span>
+              </div>
+              <h3 class="mt-4 font-display text-xl font-semibold text-ink-primary" data-i18n="card2_title">
+                bom-sourcing JSON &amp; EDA CSV Desteği
+              </h3>
+              <p class="mt-2 text-sm leading-relaxed text-ink-secondary" data-i18n="card2_desc">
+                Agent skill çıktısı olan 10 alanlı JSON veya KiCad/EasyEDA CSV dosyalarını içe aktarın. Fiyat ve stok kanıtları ham BOM alanlarına karışmadan ayrı tutulur.
+              </p>
+            </div>
+            <div class="mt-6 overflow-hidden rounded-xl border border-white/10 bg-surface-950">
+              <img
+                src="https://raw.githubusercontent.com/AtaCanYmc/bom-tr/main/docs/assets/screenshot-bridge.jpg"
+                alt="bomTR JSON ve KiCad CSV köprü ekran görüntüsü"
+                width="1024"
+                height="642"
+                class="h-auto w-full object-cover"
+                loading="lazy"
+                decoding="async"
+                onerror="this.src='https://placehold.co/800x500/101013/A1A1AA?text=bomTR+Bridge'"
+              />
+            </div>
+          </div>
+
+          <!-- Feature Card 3: Offline Fallback -->
+          <div class="flex flex-col justify-between rounded-2xl border border-white/[0.08] bg-surface-900 p-6 lg:col-span-5">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="rounded-md border border-white/15 bg-surface-800 px-2.5 py-1 font-mono text-xs text-ink-primary">03 / Graceful Degradation</span>
+                <span class="font-mono text-xs text-ink-muted">5 Dil • OKLCH</span>
+              </div>
+              <h3 class="mt-4 font-display text-xl font-semibold text-ink-primary" data-i18n="card3_title">
+                Sunucusuz Çevrimdışı Çalışma Modu
+              </h3>
+              <p class="mt-2 text-sm leading-relaxed text-ink-secondary" data-i18n="card3_desc">
+                Yerel <code class="font-mono text-xs text-copper-400">robo-api</code> sunucusu kapalıyken bile eklenti kilitlenmez; yerel BOM düzenleme ve 6 mağazada kademeli <code class="font-mono text-xs text-ink-primary">?q=...</code> arama sekmeleri açma çalışmaya devam eder.
+              </p>
+            </div>
+            <div class="mt-6 overflow-hidden rounded-xl border border-white/10 bg-surface-950">
+              <img
+                src="https://raw.githubusercontent.com/AtaCanYmc/bom-tr/main/docs/assets/screenshot-settings.jpg"
+                alt="bomTR ayarlar ve çevrimdışı 6 mağaza arama ekranı"
+                width="1024"
+                height="642"
+                class="h-auto w-full object-cover"
+                loading="lazy"
+                decoding="async"
+                onerror="this.src='https://placehold.co/800x500/101013/A1A1AA?text=bomTR+Offline+Mode'"
+              />
+            </div>
+          </div>
+
+          <!-- Feature Card 4: Cart Optimization -->
+          <div class="flex flex-col justify-between rounded-2xl border border-white/[0.08] bg-surface-900 p-6 lg:col-span-7">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="rounded-md border border-copper-500/30 bg-copper-500/10 px-2.5 py-1 font-mono text-xs text-copper-400">04 / Sepet &amp; Onay Disiplini</span>
+                <span class="font-mono text-xs text-ink-muted">No Auto-Checkout</span>
+              </div>
+              <h3 class="mt-4 font-display text-xl font-semibold text-ink-primary" data-i18n="card4_title">
+                Kargo Eşiği Dahil Tek Mağaza vs. Bölünmüş Sepet
+              </h3>
+              <p class="mt-2 text-sm leading-relaxed text-ink-secondary" data-i18n="card4_desc">
+                Belirsiz (<code class="font-mono text-xs text-copper-400">partial</code> / <code class="font-mono text-xs text-copper-400">ambiguous</code>) eşleşmeler kullanıcı açıkça onaylamadan kilitlenmez. Seçilen senaryodaki mağaza ürünleri kontrollü gruplar halinde yeni sekmelerde açılır.
+              </p>
+            </div>
+            <div class="mt-6 overflow-hidden rounded-xl border border-white/10 bg-surface-950">
+              <img
+                src="https://raw.githubusercontent.com/AtaCanYmc/bom-tr/main/docs/assets/banner-compare.jpg"
+                alt="bomTR tek mağaza ve bölünmüş sepet kıyaslama görünümü"
+                width="1024"
+                height="576"
+                class="h-auto w-full object-cover"
+                loading="lazy"
+                decoding="async"
+                onerror="this.src='https://placehold.co/960x540/101013/A1A1AA?text=bomTR+Cart+Comparison'"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10-Field BOM Contract Interactive Inspector -->
+    <section id="contract" class="reveal border-b border-white/[0.08] bg-surface-900/40 py-20">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:items-start">
+          <div class="lg:col-span-5">
+            <div class="font-mono text-xs uppercase tracking-wider text-copper-400">bom-sourcing Sözleşmesi</div>
+            <h2 class="mt-2 font-display text-3xl font-bold tracking-tight text-ink-primary" data-i18n="contract_title">
+              Saf 10 Alanlı BOM JSON Çıktısı
+            </h2>
+            <p class="mt-4 text-sm leading-relaxed text-ink-secondary" data-i18n="contract_desc">
+              Eklenti içinde topladığınız mağaza URL'leri ve anlık fiyat gözlemleri ayrı <code class="font-mono text-xs text-ink-primary">candidates</code> yapısında tutulur. Dışa aktardığınız JSON dosyası <code class="font-mono text-xs text-copper-400">bom-sourcing</code> skill şemasını asla bozmaz.
+            </p>
+
+            <ul class="mt-6 space-y-2.5 font-mono text-xs text-ink-secondary">
+              <li class="flex items-center gap-2">
+                <span class="h-1.5 w-1.5 rounded-full bg-solder-400"></span>
+                <span><strong class="text-ink-primary">status:</strong> confirmed | inferred_required | optional_or_assumed</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="h-1.5 w-1.5 rounded-full bg-copper-400"></span>
+                <span><strong class="text-ink-primary">match_confidence:</strong> exact | partial | ambiguous | unmatched</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="h-1.5 w-1.5 rounded-full bg-ink-secondary"></span>
+                <span><strong class="text-ink-primary">stock_status:</strong> in_stock | low_stock | out_of_stock | unknown</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="lg:col-span-7">
+            <div class="overflow-hidden rounded-2xl border border-white/10 bg-surface-950">
+              <div class="flex items-center justify-between border-b border-white/[0.08] bg-surface-900 px-4 py-2.5">
+                <span class="font-mono text-xs text-ink-secondary">bom-export.sample.json</span>
+                <button
+                  id="copyJsonBtn"
+                  type="button"
+                  class="rounded-md border border-white/10 bg-surface-800 px-2.5 py-1 font-mono text-xs text-ink-primary transition hover:border-copper-500/40 hover:text-copper-400"
+                >
+                  JSON Kopyala
+                </button>
+              </div>
+              <pre id="sampleJsonBlock" class="overflow-x-auto p-4 font-mono text-xs leading-relaxed text-ink-secondary"><code>[
+  {
+    "raw_name": "HX711",
+    "canonical_name": "HX711 Yük Hücresi Amplifikatör Modülü",
+    "quantity": 1,
+    "status": "confirmed",
+    "source_files": ["src/scale.cpp:15-29", "include/pins.h:5-6"],
+    "constraints": {
+      "interface": "2-wire serial (DT, SCK)",
+      "adc": "24-bit"
+    },
+    "search_queries": ["HX711 modül", "HX711 load cell amplifier"],
+    "match_confidence": "exact",
+    "stock_status": "in_stock",
+    "notes": "Kullanıcı tarafından onaylandı; load cell gövdesi ayrıca kontrol edilmeli."
+  }
+]</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Download & Installation Section -->
+    <section id="install" class="reveal py-20">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="rounded-3xl border border-white/10 bg-surface-900 p-6 sm:p-10">
+          <div class="flex flex-col justify-between gap-6 border-b border-white/[0.08] pb-8 lg:flex-row lg:items-end">
+            <div>
+              <div class="font-mono text-xs uppercase tracking-wider text-copper-400" data-i18n="inst_kicker">Kurulum &amp; Dağıtım</div>
+              <h2 class="mt-2 font-display text-3xl font-bold tracking-tight text-ink-primary" data-i18n="inst_title">
+                2 Dakikada Chrome'a Yükle
+              </h2>
+              <p class="mt-2 max-w-2xl text-sm text-ink-secondary" data-i18n="inst_desc">
+                Chrome Web Mağazası incelemesi tamamlanana kadar en güncel imzalı paketi GitHub Releases üzerinden indirip geliştirici moduyla doğrudan kurabilirsiniz.
+              </p>
+            </div>
+
+            <div class="flex flex-wrap gap-3">
+              <a
+                href="https://github.com/AtaCanYmc/bom-tr/releases/latest"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-2 rounded-xl bg-copper-500 px-5 py-3 text-sm font-semibold text-surface-950 transition hover:bg-copper-400"
+              >
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <span>Latest Release (.zip)</span>
+              </a>
+              <a
+                href="https://github.com/AtaCanYmc/bom-tr/blob/main/docs/privacy.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-surface-950 px-4 py-3 text-sm font-medium text-ink-secondary transition hover:border-white/30 hover:text-ink-primary"
+              >
+                <span data-i18n="inst_privacy">Gizlilik Politikası</span>
+              </a>
+            </div>
+          </div>
+
+          <div class="mt-8 grid grid-cols-1 gap-6 md:grid-cols-3">
+            <div class="rounded-2xl border border-white/[0.07] bg-surface-950 p-5">
+              <div class="font-mono text-xs text-copper-400">ADIM 01</div>
+              <h3 class="mt-2 font-display text-base font-semibold text-ink-primary" data-i18n="step1_t">Paketi İndir &amp; Çıkar</h3>
+              <p class="mt-2 text-xs leading-relaxed text-ink-secondary" data-i18n="step1_d">
+                GitHub Releases sayfasından en son <code class="font-mono text-ink-primary">bom-tr-*.zip</code> dosyasını indirin ve bir klasöre çıkarın (veya kaynaktan <code class="font-mono text-ink-primary">make build</code> çalıştırın).
+              </p>
+            </div>
+
+            <div class="rounded-2xl border border-white/[0.07] bg-surface-950 p-5">
+              <div class="font-mono text-xs text-copper-400">ADIM 02</div>
+              <h3 class="mt-2 font-display text-base font-semibold text-ink-primary" data-i18n="step2_t">Geliştirici Modunu Aç</h3>
+              <p class="mt-2 text-xs leading-relaxed text-ink-secondary" data-i18n="step2_d">
+                Chrome adres çubuğuna <code class="font-mono text-ink-primary">chrome://extensions</code> yazın, sağ üst köşeden <strong>Geliştirici modu</strong> anahtarını aktif hale getirin.
+              </p>
+            </div>
+
+            <div class="rounded-2xl border border-white/[0.07] bg-surface-950 p-5">
+              <div class="font-mono text-xs text-copper-400">ADIM 03</div>
+              <h3 class="mt-2 font-display text-base font-semibold text-ink-primary" data-i18n="step3_t">Paketlenmemiş Öğe Yükle</h3>
+              <p class="mt-2 text-xs leading-relaxed text-ink-secondary" data-i18n="step3_d">
+                <strong>Paketlenmemiş öğe yükle</strong> butonuna tıklayıp çıkardığınız klasörü seçin. Araç çubuğundan veya <code class="font-mono text-ink-primary">Ctrl+Shift+B</code> ile Side Panel'i açın.
+              </p>
+            </div>
+          </div>
+
+          <!-- Optional Local robo-api Quick Snippet -->
+          <div class="mt-6 flex flex-col items-start justify-between gap-3 rounded-xl border border-white/[0.08] bg-surface-950 px-4 py-3 sm:flex-row sm:items-center">
+            <div class="font-mono text-xs text-ink-secondary">
+              <span class="text-solder-400">$</span> git clone https://github.com/AtaCanYmc/bom-tr.git &amp;&amp; cd bom-tr &amp;&amp; make install &amp;&amp; make build
+            </div>
+            <button
+              id="copyCmdBtn"
+              type="button"
+              class="shrink-0 rounded-lg border border-white/10 bg-surface-900 px-2.5 py-1 font-mono text-xs text-ink-secondary transition hover:border-white/25 hover:text-ink-primary"
+            >
+              Komutu Kopyala
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Minimal Architectural Footer -->
+  <footer class="border-t border-white/[0.08] py-10">
+    <div class="mx-auto flex max-w-7xl flex-col items-start justify-between gap-4 px-4 text-xs text-ink-muted sm:flex-row sm:items-center sm:px-6 lg:px-8">
+      <div class="flex items-center gap-2.5">
+        <span class="font-display font-semibold text-ink-primary">bomTR</span>
+        <span>•</span>
+        <span>MIT License — AtaCanYmc</span>
+      </div>
+      <div class="flex flex-wrap items-center gap-5">
+        <a href="https://github.com/AtaCanYmc/bom-tr" target="_blank" rel="noopener noreferrer" class="transition hover:text-ink-primary">GitHub</a>
+        <a href="https://github.com/AtaCanYmc/robo-market-search" target="_blank" rel="noopener noreferrer" class="transition hover:text-ink-primary">robo-market-search</a>
+        <a href="https://github.com/AtaCanYmc/bom-tr/blob/main/docs/privacy.md" target="_blank" rel="noopener noreferrer" class="transition hover:text-ink-primary">Privacy</a>
+        <a href="https://github.com/AtaCanYmc/bom-tr/issues" target="_blank" rel="noopener noreferrer" class="transition hover:text-ink-primary">Issues</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="pointer-events-none fixed bottom-5 right-5 z-50 translate-y-4 rounded-xl border border-solder-500/40 bg-surface-900 px-4 py-2.5 font-mono text-xs text-solder-400 opacity-0 shadow-xl transition-all duration-300">
+    Panoya kopyalandı
+  </div>
+
+  <script>
+    // Interactive Side Panel Preview Tabs
+    const tabButtons = document.querySelectorAll('.panel-tab');
+    const panelViews = document.querySelectorAll('.panel-view');
+
+    tabButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const target = btn.getAttribute('data-panel-tab');
+        tabButtons.forEach((b) => {
+          b.classList.remove('bg-surface-800', 'text-copper-400', 'font-medium');
+          b.classList.add('text-ink-secondary');
+        });
+        btn.classList.add('bg-surface-800', 'text-copper-400', 'font-medium');
+        btn.classList.remove('text-ink-secondary');
+
+        panelViews.forEach((view) => {
+          view.classList.toggle('hidden', view.id !== `panel-${target}`);
+        });
+      });
+    });
+
+    // Interactive "Onayla" demo state inside Side Panel
+    const approveBtn = document.getElementById('approveDemoBtn');
+    if (approveBtn) {
+      approveBtn.addEventListener('click', () => {
+        approveBtn.textContent = 'exact ✓';
+        approveBtn.classList.remove('bg-copper-500', 'text-surface-950', 'hover:bg-copper-400');
+        approveBtn.classList.add('border', 'border-solder-500/40', 'bg-solder-500/15', 'text-solder-400');
+      });
+    }
+
+    // Clipboard helper (iframe-safe)
+    function copyText(text, label) {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        showToast(label);
+      } catch (e) {
+        showToast('Kopyalama desteklenmiyor');
+      }
+      document.body.removeChild(textarea);
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      if (!toast) return;
+      toast.textContent = msg;
+      toast.classList.remove('opacity-0', 'translate-y-4');
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-4');
+      }, 2200);
+    }
+
+    document.getElementById('copyJsonBtn')?.addEventListener('click', () => {
+      const raw = document.getElementById('sampleJsonBlock')?.innerText || '';
+      copyText(raw, '10-alanlı BOM JSON kopyalandı');
+    });
+
+    document.getElementById('copyCmdBtn')?.addEventListener('click', () => {
+      copyText(
+        'git clone https://github.com/AtaCanYmc/bom-tr.git && cd bom-tr && make install && make build',
+        'Kurulum komutu kopyalandı'
+      );
+    });
+
+    // Lightweight TR / EN Toggle
+    let currentLang = 'tr';
+    const dict = {
+      en: {
+        nav_download: 'Download',
+        hero_badge: 'Chrome Side Panel + Offline Ready',
+        hero_title: 'Manage your BOM.<br /><span class="text-copper-400">Compare 6 stores</span> in one side panel.',
+        hero_desc: 'Open-source Chrome Side Panel workbench for hardware engineers, makers, and robotics teams. Strict 10-field bom-sourcing schema, KiCad/EasyEDA CSV bridge, and single vs. split cart totals with shipping thresholds.',
+        cta_release: 'Download GitHub Release ZIP (v0.1.3)',
+        cta_video: 'Watch Demo Video',
+        stat_stores: 'Live DOM & price capture',
+        stat_schema: 'Strict BOM JSON contract',
+        stat_privacy: 'Local-only storage',
+        stores_kicker: 'Supported Store Network',
+        stores_sub: 'Scoped strictly to these 6 Turkish component stores; no broad <all_urls> permission.',
+        feat_kicker: 'Core Architecture',
+        feat_title: 'Source components without losing context across tabs.',
+        card1_title: 'One-Click Store Capture & Right-Click Add',
+        card1_desc: 'Capture product title, price, stock status, and SKU directly on supported store pages, or right-click any selected part name on GitHub/datasheets.',
+        card2_title: 'bom-sourcing JSON & EDA CSV Bridge',
+        card2_desc: 'Import and export strict 10-field BOM JSON, Markdown, KiCad CSV, and EasyEDA CSV files while keeping price evidence isolated.',
+        card3_title: 'Serverless Offline Fallback Mode',
+        card3_desc: 'Works even when local robo-api is offline: edit BOMs locally and launch staggered 6-store ?q=... search tabs in one click.',
+        card4_title: 'Single-Store vs. Split-Cart Optimization',
+        card4_desc: 'Ambiguous matches require explicit approval before locking. Compare shipping-aware totals and open product tabs in controlled batches.',
+        contract_title: 'Pure 10-Field BOM JSON Output',
+        contract_desc: 'Store URLs and query-time price observations live in a separate candidates structure so exported JSON always conforms to bom-sourcing.',
+        inst_kicker: 'Installation & Release',
+        inst_title: 'Load into Chrome in 2 Minutes',
+        inst_desc: 'Download the latest release ZIP from GitHub Releases and load it via Chrome Developer Mode.',
+        inst_privacy: 'Privacy Policy',
+        step1_t: 'Download & Unzip',
+        step1_d: 'Grab the latest bom-tr-*.zip from GitHub Releases and extract it locally (or run make build from source).',
+        step2_t: 'Enable Developer Mode',
+        step2_d: 'Open chrome://extensions in Chrome and toggle Developer mode on in the top-right corner.',
+        step3_t: 'Load Unpacked',
+        step3_d: 'Click Load unpacked, select the extracted folder, and open Side Panel with Ctrl+Shift+B.'
+      }
+    };
+
+    const originalTr = {};
+    document.querySelectorAll('[data-i18n]').forEach((el) => {
+      originalTr[el.getAttribute('data-i18n')] = el.innerHTML;
+    });
+
+    document.getElementById('langToggle')?.addEventListener('click', () => {
+      currentLang = currentLang === 'tr' ? 'en' : 'tr';
+      document.documentElement.lang = currentLang;
+      document.querySelectorAll('[data-i18n]').forEach((el) => {
+        const key = el.getAttribute('data-i18n');
+        el.innerHTML = currentLang === 'en' ? dict.en[key] : originalTr[key];
+      });
+    });
+
+    // IntersectionObserver fallback only when native CSS scroll-driven animations are unsupported
+    if (
+      !CSS.supports('(animation-timeline: view()) and (animation-range: entry)') &&
+      matchMedia('(prefers-reduced-motion: no-preference)').matches
+    ) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('is-visible');
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.12 }
+      );
+      document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+    }
+  </script>
+</body>
+</html>

@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.3](https://github.com/AtaCanYmc/bom-tr/compare/v0.1.2...v0.1.3) (2026-11-23)
+
+
+### Features
+
+* add product HTML templates and enhance BOM project settings with currency and shipping threshold overrides ([06e6dd1](https://github.com/AtaCanYmc/bom-tr/commit/06e6dd18826d4572b5f37f7e21259c71190187c7))
+
+
+### Bug Fixes
+
+* declare CSS modules for TypeScript ([d925ee4](https://github.com/AtaCanYmc/bom-tr/commit/d925ee42fbb9d13bdcd83a22aa63a76ecac6e9d0))
+
 ## [0.1.2](https://github.com/AtaCanYmc/bom-tr/compare/v0.1.1...v0.1.2) (2026-11-23)
 
 

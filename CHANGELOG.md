@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.4](https://github.com/AtaCanYmc/bom-tr/compare/v0.1.3...v0.1.4) (2026-11-23)
+
+
+### Bug Fixes
+
+* **mv3:** open side panel synchronously on context menu click and guard async SW handlers ([1b3bcc4](https://github.com/AtaCanYmc/bom-tr/commit/1b3bcc43e6306fc370835d98f6e3c1ce17ce0732))
+* **security:** enforce URL sanitization, MV3 sender checks, CSV formula neutralization, and CI permissions ([427f8cc](https://github.com/AtaCanYmc/bom-tr/commit/427f8cc7fb8acfd19d6330d6939e4969ebdd6c5d))
+
+
+### Documentation
+
+* ground README trees, update roadmap status, and document KiCad/EasyEDA CSV codecs ([841d995](https://github.com/AtaCanYmc/bom-tr/commit/841d99574c811f222e04a05083332949fbe717f0))
+
 ## [0.1.3](https://github.com/AtaCanYmc/bom-tr/compare/v0.1.2...v0.1.3) (2026-11-23)
 
 
